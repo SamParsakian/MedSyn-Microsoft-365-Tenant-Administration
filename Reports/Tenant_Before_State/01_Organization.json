@@ -1,0 +1,15 @@
+{
+  "DisplayName": "Nackademin",
+  "Id": "04b3fb6f-c6b0-4281-a7b1-73eb33da990c",
+  "VerifiedDomains": [
+    {
+      "Capabilities": "Email, OfficeCommunicationsOnline",
+      "IsDefault": true,
+      "IsInitial": true,
+      "Name": "samstack.onmicrosoft.com",
+      "Type": "Managed"
+    }
+  ],
+  "CountryLetterCode": "SE",
+  "PreferredLanguage": "en"
+}
