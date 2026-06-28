@@ -1,0 +1,4 @@
+"IssueTitle","IssueType","AffectedService","Updated","ID"
+"Some users may see that when selecting a meeting room when scheduling meetings, it changes from available to unavailable","Advisory","Exchange Online","Jun 26, 2026, 9:28 PM GMT+2","EX1233142"
+"Issue with webhook-based task notifications in Microsoft To Do","Advisory","Microsoft 365 suite","Jun 23, 2026, 9:23 AM GMT+2","MO1331639"
+"Admins may be unable to see the configuration search schema mappings in SharePoint Online","Advisory","SharePoint Online","Jun 22, 2026, 11:18 AM GMT+2","SP1393483"

@@ -360,3 +360,24 @@ _Mail flow page in the Exchange admin center, showing the two new SMLC rules ena
 _An email received from outside the organisation, showing the warning banner added above the message body._
 
 Conditional access, MFA, and the remaining Defender features are still ahead. The auto-forwarding block stays on the list as the one open item from this step, to be switched on once Microsoft's side catches up - everything else is in place, which is enough to move on and look at how Microsoft 365 itself is running: service health and the message centre.
+
+Step 08 — Service Health and Message Center
+
+A tenant does not run in isolation, so part of looking after it is keeping an eye on what Microsoft itself is reporting about the service. This step was a short review of two pages in the admin center rather than a configuration change: Service health, which shows whether anything is currently broken, and Message center, which lists upcoming changes Microsoft is rolling out.
+
+Service health showed three advisories at the time of the check - a minor meeting room availability glitch in Exchange Online, a webhook notification issue in Microsoft To Do, and a SharePoint Online search schema display issue. All three were Microsoft-side advisories rather than outages, and none of them affect anything SMLC depends on. Every other listed service, including Teams, SharePoint, Exchange, and Entra, showed as healthy.
+
+Message center had 404 items, far too many to read individually, so the review focused on picking out the ones that actually matter. One stood out: an update saying Microsoft Entra ID self-service password reset will require a registered authentication method from everyone starting 6 September 2026. This is worth tracking closely, since SMLC has not set up multi-factor authentication or conditional access yet - once that work starts, every user account will need a registered method in place before the deadline, or that person will not be able to reset their own password and will need an admin to do it manually instead.
+
+Two reports were saved for this step:
+
+- Reports/Service_Health_Message_Center/01_ServiceHealth.csv
+- Reports/Service_Health_Message_Center/02_MessageCenterHighlight.csv
+
+![Service health overview](images/step08-service-health.png)
+_Service health page, showing the three active advisories and the healthy status of the remaining services._
+
+![Message center inbox](images/step08-message-center.png)
+_Message center inbox, showing the volume and range of messages Microsoft sends to tenant admins._
+
+Nothing here needed fixing today, but the password reset change is worth remembering for later, since MFA and conditional access have not been set up yet and that deadline will matter once they are. After this, it felt like a good time to sit down and actually look through who has access to what across the tenant.
