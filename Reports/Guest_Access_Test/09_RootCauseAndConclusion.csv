@@ -1,0 +1,7 @@
+"CheckPerformed","Result","RuledOutAsCause"
+"AllowInvitesFrom (Authorization Policy)","everyone (already permissive)","Yes"
+"Conditional Access policies","0 policies exist in the tenant","Yes"
+"Cross-tenant access default policy (B2B Collaboration Inbound/Outbound)","Allowed for AllUsers / AllApplications (already permissive)","Yes"
+"Directory settings (legacy B2B domain allow/deny list)","Not readable - BadRequest, no custom settings object exists","Inconclusive, but no allow/deny list was ever configured"
+"Security Defaults","Enabled","No - this is the likely real cause"
+"Conclusion","Guest invitations are blocked because Security Defaults is enforcing baseline protections (including MFA-related requirements for sensitive directory actions) and no account in this tenant has MFA configured yet. This is the same gap already flagged in Step 08's Message Center finding (Entra ID SSPR/authentication method requirement). No guests were created. This is correct, expected behaviour for a tenant that has not yet completed its MFA/Conditional Access setup, not a tooling failure.",""

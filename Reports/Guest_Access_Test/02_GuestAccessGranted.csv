@@ -1,0 +1,3 @@
+"Email","IntendedGroup","ActualGroups","BlockedFromRestricted","Status","Error"
+"vendor.tech@example.com","SMLC - TechOps","","","FAILED","[Forbidden] : Guest invitations not allowed for your company. Contact your company administrator for more details."
+"clinic.contact@example.com","SMLC - BizOps","","","FAILED","[Forbidden] : Guest invitations not allowed for your company. Contact your company administrator for more details."

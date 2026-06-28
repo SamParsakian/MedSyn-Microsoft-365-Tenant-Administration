@@ -1,0 +1,3 @@
+"Email","DisplayName","Status","Error"
+"vendor.tech@example.com","Vendor Tech (Guest)","FAILED","[Forbidden] : Guest invitations not allowed for your company. Contact your company administrator for more details."
+"clinic.contact@example.com","Clinic Contact (Guest)","FAILED","[Forbidden] : Guest invitations not allowed for your company. Contact your company administrator for more details."

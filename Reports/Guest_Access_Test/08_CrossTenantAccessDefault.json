@@ -1,0 +1,161 @@
+{
+  "AppServiceConnectInbound": {
+    "Applications": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllApplications",
+          "TargetType": "application"
+        }
+      ]
+    }
+  },
+  "AutomaticUserConsentSettings": {
+    "InboundAllowed": false,
+    "OutboundAllowed": false
+  },
+  "B2BCollaborationInbound": {
+    "Applications": {
+      "AccessType": "allowed",
+      "Targets": [
+        {
+          "Target": "AllApplications",
+          "TargetType": "application"
+        }
+      ]
+    },
+    "UsersAndGroups": {
+      "AccessType": "allowed",
+      "Targets": [
+        {
+          "Target": "AllUsers",
+          "TargetType": "user"
+        }
+      ]
+    }
+  },
+  "B2BCollaborationOutbound": {
+    "Applications": {
+      "AccessType": "allowed",
+      "Targets": [
+        {
+          "Target": "AllApplications",
+          "TargetType": "application"
+        }
+      ]
+    },
+    "UsersAndGroups": {
+      "AccessType": "allowed",
+      "Targets": [
+        {
+          "Target": "AllUsers",
+          "TargetType": "user"
+        }
+      ]
+    }
+  },
+  "B2BDirectConnectInbound": {
+    "Applications": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllApplications",
+          "TargetType": "application"
+        }
+      ]
+    },
+    "UsersAndGroups": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllUsers",
+          "TargetType": "user"
+        }
+      ]
+    }
+  },
+  "B2BDirectConnectOutbound": {
+    "Applications": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllApplications",
+          "TargetType": "application"
+        }
+      ]
+    },
+    "UsersAndGroups": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllUsers",
+          "TargetType": "user"
+        }
+      ]
+    }
+  },
+  "Id": "f250f7fc-c869-46c2-b786-10dcf9a16f3a",
+  "InboundTrust": {
+    "IsCompliantDeviceAccepted": false,
+    "IsHybridAzureAdJoinedDeviceAccepted": false,
+    "IsMfaAccepted": false
+  },
+  "InvitationRedemptionIdentityProviderConfiguration": {
+    "FallbackIdentityProvider": "defaultConfiguredIdp",
+    "PrimaryIdentityProviderPrecedenceOrder": [
+      "azureActiveDirectory",
+      "externalFederation",
+      "socialIdentityProviders"
+    ]
+  },
+  "IsServiceDefault": true,
+  "M365CollaborationInbound": {
+    "Users": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllUsers",
+          "TargetType": "user"
+        }
+      ]
+    }
+  },
+  "M365CollaborationOutbound": {
+    "UsersAndGroups": {
+      "AccessType": "allowed",
+      "Targets": [
+        {
+          "Target": "AllUsers",
+          "TargetType": "user"
+        }
+      ]
+    }
+  },
+  "TenantRestrictions": {
+    "Applications": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllApplications",
+          "TargetType": "application"
+        }
+      ]
+    },
+    "Devices": {
+      "Mode": null,
+      "Rule": null
+    },
+    "UsersAndGroups": {
+      "AccessType": "blocked",
+      "Targets": [
+        {
+          "Target": "AllUsers",
+          "TargetType": "user"
+        }
+      ]
+    }
+  },
+  "AdditionalProperties": {
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#policies/crossTenantAccessPolicy/default/$entity"
+  }
+}

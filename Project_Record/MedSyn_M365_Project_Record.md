@@ -381,3 +381,32 @@ _Service health page, showing the three active advisories and the healthy status
 _Message center inbox, showing the volume and range of messages Microsoft sends to tenant admins._
 
 Nothing here needed fixing today, but the password reset change is worth remembering for later, since MFA and conditional access have not been set up yet and that deadline will matter once they are. After this, it felt like a good time to sit down and actually look through who has access to what across the tenant.
+
+Step 09 — Manual Access Review and Guest Access Test
+
+This was the closing check for Part 1: going back through every group, looked at from the angle of "does this person actually need to be here," and then trying out what happens when an outside guest is added to the mix.
+
+Membership in Finance, MgmtAdmin, ITInfra, BizOps, TechOps, and Knowledge Base was pulled and checked against the original design, alongside the dedicated security groups (SG-SMLC-Finance-Private, SG-SMLC-HR-Private, SG-SMLC-ITInfra-Private, SG-SMLC-TechOps-Tools, SG-SMLC-FieldOps-RemoteAccess). Everything matched: Finance still has only its three Finance staff, ITInfra still has only its six IT staff, and nobody outside HR sits in the HR security group. Knowledge Base, Policies, and Templates were not re-checked from scratch, since nothing has touched SharePoint since Step 06 - their read-only all-staff access is still on record there.
+
+The admin-only and break-glass accounts were the other half of this check. All ten of them - the eight `adm-` accounts plus the two break-glass accounts - sit in exactly two places, SMLC-Admins and SG-SMLC-M365-Admins, and nowhere else. None of them turned up in any department group, any security group, any Team, or any shared mailbox. Daily work and emergency access stay completely separate, exactly as they were set up back in Step 02.
+
+The second half of the step was trying to add two guest users for testing: a vendor contact for TechOps and a clinic contact for BizOps, each meant to get a small, limited slice of access and nothing more. Both invitations were rejected outright by the tenant before anything could be created. Tracking down why took a few checks - the setting that controls who can send invitations was already wide open, there were no Conditional Access policies in place, and the cross-tenant collaboration settings allowed external users by default. The actual cause turned out to be Security Defaults, which is switched on for this tenant and enforces baseline protections, including around multi-factor authentication, before sensitive actions like inviting a guest are allowed to go through. Since MFA has not been set up for anyone yet - the same gap flagged in the previous step's Message Center review - the invitation never had a chance.
+
+No guest accounts exist in the tenant as a result, which is arguably the better outcome for this stage: it shows the tenant is refusing external access on its own, before any access decision even had to be made. Turning that protection off just to push two test accounts through would have defeated the point of running this check in the first place, so it was left exactly as it was found.
+
+Six reports were saved for this step:
+
+- Reports/Manual_Access_Review/01_GroupMembership.csv
+- Reports/Manual_Access_Review/02_AdminSeparationCheck.csv
+- Reports/Manual_Access_Review/03_AdminAccountScope.csv
+- Reports/Manual_Access_Review/04_ErrorsAndLimitations.csv
+- Reports/Guest_Access_Test/01_GuestsCreated.csv
+- Reports/Guest_Access_Test/09_RootCauseAndConclusion.csv
+
+![Security defaults status](images/step09-security-defaults.png)
+_Microsoft Entra admin center, showing Security Defaults switched on for the tenant._
+
+![No guest users in the directory](images/step09-no-guests.png)
+_Users list filtered to guest accounts, showing none exist after the blocked invitation attempt._
+
+This closes out Part 1. Every account, group, site, and mailbox has been checked against the design at least once, and the one open door - guest access - turned out to already be locked. Part 2 picks up from here with onboarding, offboarding, and incident response.
