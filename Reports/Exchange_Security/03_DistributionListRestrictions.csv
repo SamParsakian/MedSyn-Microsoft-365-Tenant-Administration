@@ -1,0 +1,6 @@
+"DistributionList","Address","RequireSenderAuthenticationEnabled","AcceptMessagesOnlyFromSendersOrMembers","Status","Error"
+"All Staff","allstaff@samstack.onmicrosoft.com","True","SMLC-MgmtAdmin_65557ae6-43ca-4e43-b410-82fe4909e377","Confirmed",""
+"Management","management@samstack.onmicrosoft.com","True","SMLC-MgmtAdmin_65557ae6-43ca-4e43-b410-82fe4909e377","Confirmed",""
+"HR","hr-team@samstack.onmicrosoft.com","True","SMLC-MgmtAdmin_65557ae6-43ca-4e43-b410-82fe4909e377","Confirmed",""
+"Finance","finance-team@samstack.onmicrosoft.com","True","SMLC-MgmtAdmin_65557ae6-43ca-4e43-b410-82fe4909e377","Confirmed",""
+"Security","security-team@samstack.onmicrosoft.com","True","SMLC-MgmtAdmin_65557ae6-43ca-4e43-b410-82fe4909e377","Confirmed",""

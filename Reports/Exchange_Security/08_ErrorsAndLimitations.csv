@@ -1,0 +1,4 @@
+"Area","Item","Status","Error"
+"DefenderFeature","Safe Links (Defender for Office 365)","NotAvailable","Not available on current license"
+"DefenderFeature","Safe Attachments (Defender for Office 365)","NotAvailable","Not available on current license"
+"OutboundSpamPolicy","AutoForwardingMode (block external auto-forwarding)","StillPendingPropagation","Rechecked again on a separate day; Set-HostedOutboundSpamFilterPolicy still rejected with the same Enable-OrganizationCustomization message. AutoForwardingMode remains at the tenant default (Automatic), not yet set to Off. No mailbox currently has any forwarding configured (re-confirmed for all 35 mailboxes on this recheck), so exposure remains low. Needs a recheck again later - this is taking longer to propagate than usual."

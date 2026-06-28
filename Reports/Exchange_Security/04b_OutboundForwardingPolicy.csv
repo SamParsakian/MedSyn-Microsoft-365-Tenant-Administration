@@ -1,0 +1,2 @@
+"Setting","Before","After","Status","Error"
+"Outbound Spam Filter - AutoForwardingMode","Automatic","Automatic","StillPendingPropagation","||The command you tried to run isn't currently allowed in your organization. To run this command, you first need to run the command: Enable-OrganizationCustomization."

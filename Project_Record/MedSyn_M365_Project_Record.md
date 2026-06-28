@@ -318,3 +318,45 @@ _Site permissions page for SMLC-Policies, showing operations.manager listed as a
 _Group membership panel for SMLC-Finance, showing access limited to the Finance team only._
 
 Admin roles and guest access still have not been looked at. SharePoint itself is in a good place now though, with permissions matching the design and external sharing turned off everywhere, so Exchange Online and its mail security rules are next.
+
+Step 07 — Exchange Online and Basic Email Security
+
+The mailboxes, shared mailboxes, and distribution lists were already set up back in Step 03, but nothing had been done yet to protect the mail flow itself. This step went back over that setup to confirm it was still correct, then added a small set of mail flow rules that any small company would normally turn on early: a warning for mail coming from outside the company, and a block on the file types most often used to deliver malware.
+
+```powershell
+Connect-ExchangeOnline
+
+New-TransportRule -Name "SMLC - External Sender Warning" `
+    -FromScope NotInOrganization -SentToScope InOrganization `
+    -ApplyHtmlDisclaimerLocation Prepend -ApplyHtmlDisclaimerFallbackAction Wrap `
+    -ApplyHtmlDisclaimerText "Caution: this email came from an external sender. Do not click links or open attachments unless you recognise the sender."
+
+New-TransportRule -Name "SMLC - Block Risky Attachments" `
+    -AttachmentExtensionMatchesWords exe,bat,cmd,scr,vbs,js,ps1,msi,hta,jar,reg `
+    -RejectMessageReasonText "This file type is blocked for security reasons. Contact IT support if you need to share this file."
+```
+
+Before either rule was created, the tenant had no mail flow rules at all, so both went in cleanly. The five sensitive distribution lists from Step 03 - All Staff, Management, HR, Finance, and Security - were checked again and still only accept mail from the management group, exactly as they were left. Permissions on the nine shared mailboxes were also checked against the original design and matched: each one still grants full access and send-as rights to the same department staff it was set up for, and nothing else. None of the 35 mailboxes in the tenant had any forwarding rule configured, which is the expected state for a tenant that has not been touched by anyone outside the project.
+
+One setting still could not be finished. Blocking automatic forwarding to external addresses is normally done through the outbound spam filter policy, but this tenant had never had any policy customisation applied before, which Exchange Online requires as a one-time step first. That one-time step was run, and the forwarding setting was checked again on a separate day to give it time to take effect, but it is still being rejected with the same message. AutoForwardingMode is therefore left at the tenant default for now, not yet switched to Off. This was checked twice across two sessions and both times no mailbox in the tenant had any forwarding rule configured at all, so there is no real exposure while this setting finishes propagating on Microsoft's side.
+
+Anti-spam, anti-malware, and basic anti-phishing protection were all confirmed present and active, since these come as standard with every Exchange Online mailbox. Safe Links and Safe Attachments, which catch malicious links and attachments at the moment someone opens them, belong to Microsoft Defender for Office 365 and are not part of the Business Basic plan SMLC is using - both are noted here as a planned upgrade rather than something missing by mistake. The security@samstack.onmicrosoft.com mailbox used for alerts was also confirmed to still exist and hold the same access it was given in Step 03.
+
+Eight reports were saved for this step:
+
+- Reports/Exchange_Security/00_TransportRules_Before.csv
+- Reports/Exchange_Security/01_AcceptedDomains.csv
+- Reports/Exchange_Security/02_TransportRules.csv
+- Reports/Exchange_Security/03_DistributionListRestrictions.csv
+- Reports/Exchange_Security/04b_OutboundForwardingPolicy.csv
+- Reports/Exchange_Security/05_MailboxForwardingStatus.csv
+- Reports/Exchange_Security/06_SharedMailboxPermissions.csv
+- Reports/Exchange_Security/07_AntiSpamMalwarePhishingAvailability.csv
+
+![Mail flow rules in the Exchange admin center](images/step07-mailflow-rules.png)
+_Mail flow page in the Exchange admin center, showing the two new SMLC rules enabled and enforced._
+
+![External sender warning on a test email](images/step07-external-banner.png)
+_An email received from outside the organisation, showing the warning banner added above the message body._
+
+Conditional access, MFA, and the remaining Defender features are still ahead. The auto-forwarding block stays on the list as the one open item from this step, to be switched on once Microsoft's side catches up - everything else is in place, which is enough to move on and look at how Microsoft 365 itself is running: service health and the message centre.
