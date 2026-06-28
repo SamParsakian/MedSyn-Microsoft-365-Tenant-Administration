@@ -1,0 +1,6 @@
+"Step","Status","Detail","Error"
+"CreateUser","Created","new.techops01@samstack.onmicrosoft.com",""
+"AddToGroup","Added","SMLC - TechOps",""
+"AddToGroup","Added","SG-SMLC-TechOps-Tools",""
+"License","Skipped","No seats available (25/25 consumed)",""
+"AccessConfirmation","Confirmed-NoRestrictedAccess","ActualGroups: SMLC - TechOps;SG-SMLC-TechOps-Tools",""

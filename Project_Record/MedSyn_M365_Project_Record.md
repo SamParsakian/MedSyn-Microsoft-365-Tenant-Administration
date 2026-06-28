@@ -410,3 +410,32 @@ _Microsoft Entra admin center, showing Security Defaults switched on for the ten
 _Users list filtered to guest accounts, showing none exist after the blocked invitation attempt._
 
 This closes out Part 1. Every account, group, site, and mailbox has been checked against the design at least once, and the one open door - guest access - turned out to already be locked. Part 2 picks up from here with onboarding, offboarding, and incident response.
+
+Step 10 — Onboarding, Offboarding, and Incident Response Test
+
+With the design checked over, the last piece of Part 2 was running the day-to-day situations the tenant is actually built for: a new starter joining TechOps, a branch support member leaving, and a Finance account that needed to be treated as compromised.
+
+The onboarding test created `new.techops01`, added it to SMLC - TechOps and its matching security group, and stopped there to check the result. Knowledge Base access did not need a separate step - the TechOps group is already a member of that site from Step 06, so anyone added to TechOps inherits it automatically. A license was not assigned: all 25 Business Basic seats were already in use, so the script correctly skipped licensing rather than forcing it, and the account was left unlicensed with a note explaining why. Reading the account's group membership back afterwards confirmed it sits only in TechOps - none of Finance, MgmtAdmin, ITInfra, or the admin groups picked it up.
+
+The offboarding test ran against `br.support02`, an existing Branch Support account. Sign-in was blocked and the account's sessions were revoked, then group removal started - and turned up something worth knowing: Microsoft Graph can remove someone from a Microsoft 365 group or a security group, but it refuses to touch a classic mail-enabled distribution list, returning a flat "cannot update" error. Three of the account's eleven groups were exactly that kind of distribution list, so those three were removed separately through Exchange Online instead. The account's Full Access and Send As rights on the shared Support mailbox were removed the same way. A check for a OneDrive to clean up found none - this account was never licensed in the first place, so it never had one. By the end, the account was fully blocked, signed out, and removed from everything it had access to.
+
+The incident response demo treated `finance.assistant` as a compromised account. Sign-in was blocked immediately and sessions were revoked. A password reset was attempted next and was refused by the tenant with an insufficient-privileges error - the same kind of protection behind Security Defaults that blocked guest invitations in the previous step showed up again here, this time getting in the way of the admin's own response. The account's password was left as it was rather than forced through some other way. Mailbox forwarding was checked and confirmed clear. Group membership was reviewed and came back as expected for a Finance, HQ-based staff member - Finance, the Finance security group, the office and all-staff groups - nothing pointed to unusual access. A check of recent sign-in activity could not be completed: Business Basic does not include access to sign-in logs through this API, the same limitation flagged for Defender features back in Step 07. Sign-in was switched back on at the end so the account, and the lab, could keep working - the revoked sessions stay revoked, so it will need a fresh sign-in either way.
+
+Nine reports were saved across the two folders for this step:
+
+- Reports/Onboarding_Offboarding/01_OnboardingTest.csv
+- Reports/Onboarding_Offboarding/02_OffboardingTest.csv
+- Reports/Onboarding_Offboarding/03_OffboardingMailboxAccess.csv
+- Reports/Onboarding_Offboarding/04_RevokeSessionsFix.csv
+- Reports/Onboarding_Offboarding/05_OffboardingDistributionLists.csv
+- Reports/Incident_Response_Demo/01_IncidentResponseActions.csv
+- Reports/Incident_Response_Demo/02_MailboxForwardingCheck.csv
+- Reports/Incident_Response_Demo/04_RevokeSessionsFix.csv
+
+![new.techops01 group membership](images/step10-onboarding-groups.png)
+_Microsoft Entra admin center, showing new.techops01's group membership limited to TechOps._
+
+![br.support02 blocked sign-in](images/step10-offboarding-blocked.png)
+_Microsoft Entra admin center, showing br.support02's account status as disabled and group memberships at zero._
+
+This is the last build-and-test step in the project. Every account type, every department, and the three situations an admin deals with most often - someone joining, someone leaving, and something going wrong - have now all been run through and written up. What is left is pulling the whole record together into a finished write-up.
