@@ -203,3 +203,118 @@ _Active teams and groups page, showing the eight SMLC teams alongside the tenant
 _Channels list for SMLC - Finance, showing the Payroll and Compliance channels marked Private next to the standard channels._
 
 SharePoint sites, SharePoint permissions, admin role assignments, and guest users are still untouched. With the Teams structure now matching the approved departments, the next step can move on to SharePoint.
+
+Step 05 — SharePoint Sites and Folder Structure
+
+Every Microsoft 365 group already has a SharePoint site attached to it from the moment the group is created, so most of the SharePoint structure for SMLC was already sitting in the tenant once the groups from Step 03 existed. This step went through the ten sites in the approved design, confirmed the eight that already existed, created the two that did not, and then built the agreed folder structure inside each one.
+
+Eight of the ten sites needed no new work: SMLC-HQ, SMLC-Branch, SMLC-MgmtAdmin, SMLC-ITInfra, SMLC-TechOps, SMLC-BizOps, SMLC-Finance, and SMLC-KnowledgeBase are the sites that came automatically with their matching Microsoft 365 group. SMLC-Policies and SMLC-Templates have no department group behind them in the approved design, so these two were created as new Communication Sites instead, owned by the same management account that owns the SMLC-MgmtAdmin team.
+
+```powershell
+Connect-PnPOnline -Url https://samstack-admin.sharepoint.com -Interactive
+
+New-PnPTenantSite -Title "SMLC-Policies" -Url "https://samstack.sharepoint.com/sites/SMLC-Policies" `
+    -Owner "owner@samstack.onmicrosoft.com" -TimeZone 4 -Template "SITEPAGEPUBLISHING#0" -Wait
+```
+
+A few naming differences were noted while confirming the eight existing sites. SMLC-HQ and SMLC-Branch are built on the SMLC-HQ-Staff and SMLC-BR-Staff groups, so their site address still carries the "-Staff" suffix from when those groups were first created, even though the group and Team were later renamed to "SMLC - HQ" and "SMLC - Branch". SMLC-KnowledgeBase is built on a Team that was created directly with no source group, so its site has a system-generated address rather than a clean SMLC name. None of the existing sites were renamed, since renaming a site address after the fact can break the links already pointing at it.
+
+One access gap turned up while setting up the two new sites: right after creation, only the named owner account had access, so the admin completing the setup had to add their own account as a site administrator from the SharePoint admin center before any folders could be added. This is a normal check after creating a site on someone else's behalf, and it is worth confirming on any new site before assuming it is ready to use.
+
+With the ten sites confirmed, the agreed folder structure was added to the default document library of each one:
+
+| Site | Folders |
+|---|---|
+| SMLC-HQ | Announcements, Company Policies, Templates, Forms, General Documents |
+| SMLC-Branch | Branch Operations, Field Visits, Customer Notes, Branch Reports, Local Procedures |
+| SMLC-MgmtAdmin | HR Records, Employee Documents, Contracts, Internal Policies, Management Reports |
+| SMLC-ITInfra | Network Documentation, Firewall Rules, Microsoft 365 Admin, Server Documentation, Backup Records, Security Incidents, Change Logs |
+| SMLC-TechOps | Support Procedures, Software Packages, Customer Notes, Field Reports, Troubleshooting Guides, Escalations |
+| SMLC-BizOps | Sales Leads, Marketing, Customer Requests, Reports, Customer Documents |
+| SMLC-Finance | Invoices, Payroll, Expenses, Tax, Reports, Vendor Payments |
+| SMLC-KnowledgeBase | Support Guides, Troubleshooting, Known Issues, Internal Procedures |
+| SMLC-Policies | Company Policies, Security Policies, HR Policies, IT Policies |
+| SMLC-Templates | Forms, Letter Templates, Report Templates, Customer Templates |
+
+PnP PowerShell needed a fresh sign-in for every individual site it connected to, which was not practical across ten sites in a row. Instead, the folders were added by calling the SharePoint REST API directly from the browser, while already signed in to the site:
+
+```javascript
+const digest = await fetch(`${siteUrl}/_api/contextinfo`, { method: "POST" });
+await fetch(`${siteUrl}/_api/web/folders/add('Shared Documents/Invoices')`, {
+    method: "POST",
+    headers: { "X-RequestDigest": digestValue }
+});
+```
+
+Permissions were kept simple in this step, matching the group-based access model already in place: the eight group-connected sites keep the same owners as their Microsoft 365 group, and the two new sites have only their named owner set. No Members or Visitors groups were customised and no sharing settings were changed, since that work belongs to the SharePoint permissions step that follows this one.
+
+Four reports were saved for this step:
+
+- Reports/SharePoint_Sites/01_SitesCreatedOrConfirmed.csv
+- Reports/SharePoint_Sites/02_FoldersCreated.csv
+- Reports/SharePoint_Sites/03_OwnersAndSharing.csv
+- Reports/SharePoint_Sites/04_ErrorsAndLimitations.csv
+
+![SMLC SharePoint sites in the admin center](images/step05-sharepoint-sites-list.png)
+_Active sites page, showing the ten SMLC SharePoint sites alongside the tenant's existing items._
+
+![SMLC-Policies document library](images/step05-policies-folders.png)
+_Documents library for SMLC-Policies, showing the four policy folders created for that site._
+
+Permissions on these sites are still sitting at their defaults, and nobody has touched admin roles or guest access yet. That is the natural next piece of work, now that the sites and folders themselves are ready.
+
+Step 06 — SharePoint Permission Model
+
+The previous step left one open item: when SMLC-Policies and SMLC-Templates were created, only their named owner had access, and the second owner could not be added straight away. This step started by fixing that, then went through all ten sites to apply the group-based permission model agreed for SMLC.
+
+The second owner was added successfully this time, now that the access gap on the two sites was already closed. The same account was also set as a full site collection administrator on both sites, not only a member of the Owners group, which matches what "second owner" is meant to cover.
+
+```javascript
+const digest = await fetch(`${siteUrl}/_api/contextinfo`, { method: "POST" });
+await fetch(`${siteUrl}/_api/web/associatedownergroup/users`, {
+    method: "POST",
+    headers: { "X-RequestDigest": digestValue },
+    body: JSON.stringify({ "__metadata": { "type": "SP.User" }, "LoginName": "operations.manager@samstack.onmicrosoft.com" })
+});
+```
+
+The rest of the work followed the agreed permission table, using the Microsoft 365 groups already in place rather than individual accounts, so that access stays correct automatically as people join or leave a department:
+
+| Site | Change made |
+|---|---|
+| SMLC-HQ | SMLC-ITInfra added as an additional owner; SMLC-Branch given optional read access |
+| SMLC-Branch | SMLC-ITInfra added as an additional owner; SMLC-MgmtAdmin given optional read access |
+| SMLC-MgmtAdmin | No change - kept restricted to MgmtAdmin only |
+| SMLC-ITInfra | No change - kept restricted to ITInfra only |
+| SMLC-TechOps | SMLC-ITInfra added as an additional owner, covering its support role across FieldOps and Support |
+| SMLC-BizOps | SMLC-MgmtAdmin added as an additional owner |
+| SMLC-Finance | No change - kept restricted to Finance only |
+| SMLC-KnowledgeBase | SMLC-TechOps and SMLC-ITInfra added with edit access; SMLC-All-Staff given read-only access |
+| SMLC-Policies | SMLC-MgmtAdmin and SMLC-ITInfra added as owners, SMLC-MgmtAdmin given edit access, SMLC-All-Staff given read-only access |
+| SMLC-Templates | SMLC-MgmtAdmin and SMLC-ITInfra added as owners, SMLC-MgmtAdmin given edit access, SMLC-All-Staff given read-only access |
+
+Every group could be added directly by its email address, the same way a person would be added, since Microsoft 365 groups can act as SharePoint permission principals on their own. Finance, MgmtAdmin, and ITInfra were deliberately left untouched, since the design calls for these three to stay closed to general staff.
+
+External sharing was turned off on all ten sites as the last part of this step, so none of them can be shared with people outside the organisation:
+
+```powershell
+Connect-PnPOnline -Url https://samstack-admin.sharepoint.com -Interactive
+Set-PnPTenantSite -Identity "https://samstack.sharepoint.com/sites/SMLC-Finance" -SharingCapability Disabled
+```
+
+Six reports were saved for this step:
+
+- Reports/SharePoint_Permissions/01_PermissionActions.csv
+- Reports/SharePoint_Permissions/02_OwnersSnapshot.csv
+- Reports/SharePoint_Permissions/03_MembersSnapshot.csv
+- Reports/SharePoint_Permissions/04_VisitorsSnapshot.csv
+- Reports/SharePoint_Permissions/05_SharingCapability.csv
+- Reports/SharePoint_Permissions/06_ErrorsAndLimitations.csv
+
+![SMLC-Policies site permissions](images/step06-policies-permissions.png)
+_Site permissions page for SMLC-Policies, showing operations.manager listed as a site owner alongside the MgmtAdmin and ITInfra groups._
+
+![SMLC-Finance group membership](images/step06-finance-permissions.png)
+_Group membership panel for SMLC-Finance, showing access limited to the Finance team only._
+
+Admin roles and guest access still have not been looked at. SharePoint itself is in a good place now though, with permissions matching the design and external sharing turned off everywhere, so Exchange Online and its mail security rules are next.

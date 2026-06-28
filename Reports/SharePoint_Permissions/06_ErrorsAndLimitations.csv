@@ -1,0 +1,7 @@
+"Area","Item","Status","Note"
+"Loose end","SMLC-Policies / SMLC-Templates second owner","Fixed","operations.manager@samstack.onmicrosoft.com is now an Owner and a true site collection admin (IsSiteAdmin) on both sites, resolving the gap from the SharePoint sites step"
+"Site","SMLC-MgmtAdmin","IntentionallySkipped","No broader staff access added by design - restricted to MgmtAdmin only"
+"Site","SMLC-ITInfra","IntentionallySkipped","No broader staff access added by design - restricted to ITInfra only"
+"Site","SMLC-Finance","IntentionallySkipped","No broader staff access added by design - restricted to Finance only"
+"Tooling","Group-based SharePoint permissions","Resolved","Microsoft 365 groups (mail-enabled, not security-enabled) could be added directly as SharePoint Owners/Members/Visitors using the site's people picker, so the planned group-based model could be applied without falling back to individual users"
+"Tooling","External sharing","Set","SharingCapability set to Disabled on all 10 sites; no guest users were added or tested"
