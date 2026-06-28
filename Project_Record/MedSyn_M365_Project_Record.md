@@ -167,3 +167,39 @@ _Mailboxes page in the Exchange admin center, showing the new SMLC shared mailbo
 _Distribution list view in the Exchange admin center, showing the new SMLC distribution lists._
 
 Teams, SharePoint sites, and admin role assignments are still untouched at this point. With groups, distribution lists, and shared mailboxes now in place, the SMLC accounts have the collaboration and email structure they need, and the next steps can move on to Teams and SharePoint.
+
+Step 04 — Microsoft Teams Structure
+
+With groups and mail already in place, this step turned the relevant Microsoft 365 groups into Microsoft Teams and added the channels each department actually needs to work day to day.
+
+Eight teams were created: SMLC - HQ, SMLC - Branch, SMLC - MgmtAdmin, SMLC - ITInfra, SMLC - TechOps, SMLC - BizOps, and SMLC - Finance were built on top of their matching Microsoft 365 group from the previous step, so the membership already in place carried over directly. SMLC - Knowledge Base had no matching group, so it was created as a new team and opened up to all 48 staff, since it is meant to be a shared reference space for the whole company. TechOps also picked up the FieldOps and Support staff on top of its own department, since those three groups work the same support queue day to day.
+
+```powershell
+Connect-MicrosoftTeams
+
+New-Team -GroupId $itInfraGroupId
+Set-Team -GroupId $itInfraGroupId -DisplayName "SMLC - ITInfra"
+Add-TeamUser -GroupId $itInfraGroupId -User "it.manager@samstack.onmicrosoft.com" -Role Owner
+
+New-TeamChannel -GroupId $itInfraGroupId -DisplayName "Network"
+New-TeamChannel -GroupId $financeGroupId -DisplayName "Payroll" -MembershipType Private
+Add-TeamChannelUser -GroupId $financeGroupId -DisplayName "Payroll" -User "finance.manager@samstack.onmicrosoft.com"
+```
+
+Each team's department manager was made an owner (for example, the IT Manager owns SMLC - ITInfra, the Finance Manager owns SMLC - Finance), and Knowledge Base is owned jointly by IT and TechOps, since editing rights there are meant to stay with those two departments. None of the admin-only or break-glass accounts were added to any of these teams.
+
+Thirty-seven channels were created across the eight teams, matching the standard channel list for each department. Three of them were created as private channels rather than standard ones: HR Internal under SMLC - MgmtAdmin, and Payroll and Compliance under SMLC - Finance, each limited to the staff who actually need that access (HR coordinators, and Finance staff). One channel name from the original plan, "Forms", was rejected by Microsoft Teams as a reserved name, so it was created as "Company Forms" instead.
+
+Three reports were saved for this step:
+
+- Reports/Teams_Creation/01_TeamsCreated.csv
+- Reports/Teams_Creation/02_ChannelsCreated.csv
+- Reports/Teams_Creation/03_OwnersAndMembers.csv
+
+![SMLC teams in the Microsoft 365 admin center](images/step04-teams-list.png)
+_Active teams and groups page, showing the eight SMLC teams alongside the tenant's existing items._
+
+![SMLC - Finance channels](images/step04-finance-channels.png)
+_Channels list for SMLC - Finance, showing the Payroll and Compliance channels marked Private next to the standard channels._
+
+SharePoint sites, SharePoint permissions, admin role assignments, and guest users are still untouched. With the Teams structure now matching the approved departments, the next step can move on to SharePoint.
