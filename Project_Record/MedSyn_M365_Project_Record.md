@@ -2,17 +2,23 @@
 
 ### Introduction
 
-This document records the practical work completed during the Microsoft 365 tenant administration lab for Sam Medsyn Lab Company.
+This document explains the practical work completed during the Microsoft 365 tenant administration lab for Sam Medsyn Lab Company.
 
-The work is documented in the same order it was completed. Scripts and reports are saved in the repository, and screenshots are used only where a visual result is useful for review.
+The steps are written in the same order they were completed. The scripts and reports are saved in the repository, and screenshots are included only when they help prove or explain an important result.
 
-Step 01 — Tenant Baseline Capture
+The project was based on these starting documents:
 
-The project starts from a short business scenario and two CSV files: one with company-level information and one with the planned user accounts. These files describe the departments, sites, and accounts that the Microsoft 365 tenant for Sam Medsyn Lab Company should eventually contain.
+- [Business scenario](/Users/sam/Projects%20for%20CV/MedSyn_Microsoft_365/Documents/business%20scenario.md)
+- [SMLC company master data](/Users/sam/Projects%20for%20CV/MedSyn_Microsoft_365/Documents/SMLC_company_master_data.csv)
+- [SMLC people master data](/Users/sam/Projects%20for%20CV/MedSyn_Microsoft_365/Documents/SMLC_people_master_data.csv)
 
-Before any configuration was made, the current state of the tenant was collected and saved. This follows common practice in real administration work, where the starting point of an environment is recorded before changes are introduced, so that later changes can be compared against a known baseline.
+### Step 01 — Tenant Baseline Capture
 
-PowerShell was used for this step, together with the official Microsoft Graph, Exchange Online, and Microsoft Teams modules.
+The project starts with the business scenario and two CSV files linked above. One CSV contains company-level information, and the other contains the planned user accounts. Together, these files describe the departments, office locations, and accounts that should exist in the Microsoft 365 tenant for Sam Medsyn Lab Company.
+
+Before making any changes, the current state of the tenant was exported and saved. This is a normal administration practice: first capture what the environment looks like, then make changes, and later compare the result against that original baseline.
+
+PowerShell was used for this step with the official Microsoft Graph, Exchange Online, and Microsoft Teams modules.
 
 ```powershell
 # Required modules (installed once)
@@ -50,18 +56,18 @@ Get-Team | Export-Csv "10_TeamsList.csv" -NoTypeInformation
 Disconnect-MicrosoftTeams
 ```
 
-The export confirmed that the tenant did not yet contain any of the SMLC departments, groups, shared mailboxes, distribution lists, or Teams described in the project scenario. This gives a clear, fresh starting point for the configuration steps that follow.
+The export confirmed that the tenant did not yet contain the SMLC departments, groups, shared mailboxes, distribution lists, or Teams from the project scenario. This gave the project a clean starting point for the configuration work that followed.
 
 ![Tenant baseline export terminal output](images/step01-tenant-export-terminal.png)
 _Terminal output of the export script, showing each service connecting and each report being saved to the Reports folder._
 
-With the starting state recorded in Reports/Tenant_Before_State, there is now a clear baseline to compare against once the SMLC company structure is configured.
+With the starting state recorded in Reports/Tenant_Before_State, the project now had a clear baseline to compare against after the SMLC company structure was built.
 
-Step 02 — User Account Provisioning and License Assignment
+### Step 02 — User Account Provisioning and License Assignment
 
-This step builds the user identity structure for Sam Medsyn Lab Company from the people CSV file. The CSV is treated as the source of truth: each row already defines the account type, department, job title, office location, and contact details that the new accounts should have.
+Almost everything in Microsoft 365 depends on user identities. Groups, mailboxes, Teams, and permissions all need user accounts behind them, so this step created the identity layer first. The people CSV was used as the source of truth because each row already defined the account type, department, job title, office location, and contact details for each person.
 
-Three types of accounts were created from the source data: 48 staff accounts, 8 admin-only accounts, and 2 break-glass accounts. Admin-only and break-glass accounts were created separately from the staff accounts they relate to, so that daily work and administrative access stay apart. Guest users were not created in this step. All new accounts use the tenant's confirmed domain, samstack.onmicrosoft.com.
+Three types of accounts were created from the source data: 48 staff accounts, 8 admin-only accounts, and 2 break-glass accounts. The admin-only and break-glass accounts were created separately from normal staff accounts so daily work and administrative access stay clearly separated. Guest users were not created in this step. All new accounts use the tenant's confirmed domain, samstack.onmicrosoft.com.
 
 ```powershell
 Connect-MgGraph -Scopes "User.ReadWrite.All","Organization.Read.All","Domain.Read.All"
@@ -87,16 +93,16 @@ foreach ($p in $people) {
 Set-MgUserManagerByRef -UserId $userId -OdataId "https://graph.microsoft.com/v1.0/users/$managerId"
 ```
 
-Business Basic licenses were limited: only 16 seats were available at the time of this step, so 16 staff users were licensed and the remaining 32 staff users were left unlicensed for now. Admin-only and break-glass accounts were kept unlicensed on purpose, since they are not meant to be used for daily mailbox or collaboration work.
+Business Basic licenses were limited at this point. Only 16 seats were available, so 16 staff users received licenses and the remaining 32 staff users were left unlicensed for now. Admin-only and break-glass accounts were intentionally left unlicensed because they are not meant for daily mailbox or collaboration work.
 
 Two reports were saved for this step:
 
 - Reports/User_Provisioning/01_UsersCreated.csv
 - Reports/User_Provisioning/02_LicenseUsageAfter.csv
 
-Temporary passwords were generated for each account, but they are kept only in a local file (\_tmp_AI_Agent/temp_passwords.csv) and are not part of this documentation.
+Temporary passwords were generated for each account, but they are not included in this documentation.
 
-No groups, Teams, SharePoint sites, shared mailboxes, distribution lists, or admin roles were configured in this step. These are planned for later chapters.
+No groups, Teams, SharePoint sites, shared mailboxes, distribution lists, or admin roles were configured in this step. Those parts were left for later steps.
 
 ![Active users in the Microsoft 365 admin center](images/step02-active-users.png)
 _Active users page, showing the new SMLC accounts and their license status._
@@ -104,17 +110,20 @@ _Active users page, showing the new SMLC accounts and their license status._
 ![Licenses page in the Microsoft 365 admin center](images/step02-licenses.png)
 _Licenses page, showing Business Basic license usage after the new accounts were created._
 
-With the staff, admin, and break-glass accounts now in place and the available licenses assigned to a pilot group of staff users, the next steps can build on these accounts, for example by adding groups and assigning admin roles.
+![Admin-only accounts filtered in the Microsoft 365 admin center](images/step02-admin-accounts.png)
+_Users page filtered to "adm-", showing the eight admin-only accounts created in this step._
 
-Step 03 — Groups, Distribution Lists, and Shared Mailboxes
+With the staff, admin, and break-glass accounts created, and the available licenses assigned to an initial group of staff users, the next steps could build on these accounts by adding groups, mail objects, Teams, and roles.
 
-With the user accounts in place, the next step was to organize them so departments and sites could actually work and communicate as teams. This covered three related parts of the design: Microsoft 365 groups and security groups for collaboration and access control, distribution lists for internal communication, and shared mailboxes for department-facing email.
+### Step 03 — Groups, Distribution Lists, and Shared Mailboxes
+
+After the user accounts were created, the next step was to organize them so departments and sites could work together properly. This step covered three related areas: Microsoft 365 groups and security groups for collaboration and access control, distribution lists for internal communication, and shared mailboxes for department-facing email.
 
 Microsoft 365 groups and security groups
 
-Twelve Microsoft 365 groups were created, one for each department, site, and account type described in the scenario: SMLC-All-Staff, SMLC-HQ-Staff, SMLC-BR-Staff, SMLC-MgmtAdmin, SMLC-ITInfra, SMLC-TechOps, SMLC-BizOps, SMLC-Finance, SMLC-FieldOps, SMLC-Support, SMLC-HelpDesk, and SMLC-Admins. Alongside these, nine security groups were created to handle access control separately from collaboration: SG-SMLC-M365-Admins, SG-SMLC-HQ-Staff, SG-SMLC-BR-Staff, SG-SMLC-Finance-Private, SG-SMLC-HR-Private, SG-SMLC-ITInfra-Private, SG-SMLC-TechOps-Tools, SG-SMLC-FieldOps-RemoteAccess, and SG-SMLC-SharePoint-Owners.
+Twelve Microsoft 365 groups were created, one for each department, site, and account type described in the scenario: SMLC-All-Staff, SMLC-HQ-Staff, SMLC-BR-Staff, SMLC-MgmtAdmin, SMLC-ITInfra, SMLC-TechOps, SMLC-BizOps, SMLC-Finance, SMLC-FieldOps, SMLC-Support, SMLC-HelpDesk, and SMLC-Admins. Nine security groups were also created so access control could be managed separately from collaboration: SG-SMLC-M365-Admins, SG-SMLC-HQ-Staff, SG-SMLC-BR-Staff, SG-SMLC-Finance-Private, SG-SMLC-HR-Private, SG-SMLC-ITInfra-Private, SG-SMLC-TechOps-Tools, SG-SMLC-FieldOps-RemoteAccess, and SG-SMLC-SharePoint-Owners.
 
-Membership in every group came directly from the people CSV: department, office location, and job title decided who belonged where. Admin-only and break-glass accounts were kept out of every staff, department, and site group, and only added to SMLC-Admins and SG-SMLC-M365-Admins. This keeps daily work and administrative access clearly separated, in line with the rest of the project.
+Group membership came directly from the people CSV. Department, office location, and job title decided who belonged in each group. Admin-only and break-glass accounts were kept out of all staff, department, and site groups, and were added only to SMLC-Admins and SG-SMLC-M365-Admins. This keeps normal work separate from administrative access.
 
 ```powershell
 Connect-MgGraph -Scopes "Group.ReadWrite.All","User.Read.All"
@@ -134,7 +143,7 @@ foreach ($user in $financeUsers) {
 
 Distribution lists and shared mailboxes
 
-Ten distribution lists and nine shared mailboxes were created next, matching the lists in the scenario. The five most sensitive distribution lists — All Staff, Management, HR, Finance, and Security — were restricted so that only authenticated senders from the SMLC-MgmtAdmin group can post to them, which stops random or external senders from reaching the whole company.
+Ten distribution lists and nine shared mailboxes were created next, matching the scenario. The five most sensitive distribution lists — All Staff, Management, HR, Finance, and Security — were restricted so only authenticated senders from the SMLC-MgmtAdmin group can post to them. This prevents random users or external senders from emailing sensitive or company-wide lists.
 
 ```powershell
 Connect-ExchangeOnline
@@ -149,7 +158,7 @@ Add-MailboxPermission -Identity "finance@samstack.onmicrosoft.com" -User "financ
 Add-RecipientPermission -Identity "finance@samstack.onmicrosoft.com" -Trustee "finance.manager@samstack.onmicrosoft.com" -AccessRights SendAs
 ```
 
-Two small naming adjustments were needed along the way. The scenario uses the same address for a distribution list and a shared mailbox in six cases (support, helpdesk, sales, finance, hr, security), but Exchange does not allow two different mailboxes to share one address. The shared mailbox kept the clean address from the scenario, since that is the one customers and other departments would actually email, and the matching distribution list got a "-team" suffix instead, since it is only used for internal discussion. Separately, this tenant already had a few old, unrelated items named "Support," "Help Desk," "Sales," "Finance," and "HR" from earlier unrelated use, so the new shared mailboxes for those were given an "SMLC" prefix to avoid clashing with them.
+Two small naming adjustments were needed. First, the scenario used the same address for a distribution list and a shared mailbox in six cases (support, helpdesk, sales, finance, hr, security). Exchange does not allow two separate mail objects to share the same address. The shared mailbox kept the clean address from the scenario because customers and other departments would use that address. The matching distribution list received a "-team" suffix because it is only for internal discussion. Second, the tenant already had a few old, unrelated items named "Support," "Help Desk," "Sales," "Finance," and "HR" from earlier use, so the new shared mailboxes were given an "SMLC" prefix to avoid name conflicts.
 
 Three reports were saved for this step:
 
@@ -166,13 +175,13 @@ _Mailboxes page in the Exchange admin center, showing the new SMLC shared mailbo
 ![Distribution lists in the Exchange admin center](images/step03-distribution-lists.png)
 _Distribution list view in the Exchange admin center, showing the new SMLC distribution lists._
 
-Teams, SharePoint sites, and admin role assignments are still untouched at this point. With groups, distribution lists, and shared mailboxes now in place, the SMLC accounts have the collaboration and email structure they need, and the next steps can move on to Teams and SharePoint.
+With groups, distribution lists, and shared mailboxes in place, the SMLC accounts now had the basic collaboration and email structure they needed. Teams, SharePoint, and admin roles were still left for later steps.
 
-Step 04 — Microsoft Teams Structure
+### Step 04 — Microsoft Teams Structure
 
-With groups and mail already in place, this step turned the relevant Microsoft 365 groups into Microsoft Teams and added the channels each department actually needs to work day to day.
+With groups and mail already in place, this step turned the relevant Microsoft 365 groups into Microsoft Teams and added the channels each department needs for daily work.
 
-Eight teams were created: SMLC - HQ, SMLC - Branch, SMLC - MgmtAdmin, SMLC - ITInfra, SMLC - TechOps, SMLC - BizOps, and SMLC - Finance were built on top of their matching Microsoft 365 group from the previous step, so the membership already in place carried over directly. SMLC - Knowledge Base had no matching group, so it was created as a new team and opened up to all 48 staff, since it is meant to be a shared reference space for the whole company. TechOps also picked up the FieldOps and Support staff on top of its own department, since those three groups work the same support queue day to day.
+Eight teams were created. SMLC - HQ, SMLC - Branch, SMLC - MgmtAdmin, SMLC - ITInfra, SMLC - TechOps, SMLC - BizOps, and SMLC - Finance were built from their matching Microsoft 365 groups, so the memberships from the previous step carried over automatically. SMLC - Knowledge Base did not have a matching group, so it was created as a new team and opened to all 48 staff because it is meant to be a shared reference space for the company. TechOps also included FieldOps and Support staff, because those teams work on the same support queue in daily operations.
 
 ```powershell
 Connect-MicrosoftTeams
@@ -186,9 +195,9 @@ New-TeamChannel -GroupId $financeGroupId -DisplayName "Payroll" -MembershipType 
 Add-TeamChannelUser -GroupId $financeGroupId -DisplayName "Payroll" -User "finance.manager@samstack.onmicrosoft.com"
 ```
 
-Each team's department manager was made an owner (for example, the IT Manager owns SMLC - ITInfra, the Finance Manager owns SMLC - Finance), and Knowledge Base is owned jointly by IT and TechOps, since editing rights there are meant to stay with those two departments. None of the admin-only or break-glass accounts were added to any of these teams.
+Each department manager was made an owner of their team. For example, the IT Manager owns SMLC - ITInfra, and the Finance Manager owns SMLC - Finance. Knowledge Base is owned jointly by IT and TechOps because editing rights there should stay with those two departments. Admin-only and break-glass accounts were not added to any of these teams.
 
-Thirty-seven channels were created across the eight teams, matching the standard channel list for each department. Three of them were created as private channels rather than standard ones: HR Internal under SMLC - MgmtAdmin, and Payroll and Compliance under SMLC - Finance, each limited to the staff who actually need that access (HR coordinators, and Finance staff). One channel name from the original plan, "Forms", was rejected by Microsoft Teams as a reserved name, so it was created as "Company Forms" instead.
+Thirty-seven channels were created across the eight teams, matching the channel plan for each department. Three channels were created as private channels instead of standard channels: HR Internal under SMLC - MgmtAdmin, and Payroll and Compliance under SMLC - Finance. These were limited to the staff who actually need that access, such as HR coordinators and Finance staff. One channel name from the original plan, "Forms", was rejected by Microsoft Teams as a reserved name, so it was created as "Company Forms" instead.
 
 Three reports were saved for this step:
 
@@ -202,13 +211,13 @@ _Active teams and groups page, showing the eight SMLC teams alongside the tenant
 ![SMLC - Finance channels](images/step04-finance-channels.png)
 _Channels list for SMLC - Finance, showing the Payroll and Compliance channels marked Private next to the standard channels._
 
-SharePoint sites, SharePoint permissions, admin role assignments, and guest users are still untouched. With the Teams structure now matching the approved departments, the next step can move on to SharePoint.
+With the Teams structure matching the approved departments, the next major areas were SharePoint, SharePoint permissions, admin roles, and guest users.
 
-Step 05 — SharePoint Sites and Folder Structure
+### Step 05 — SharePoint Sites and Folder Structure
 
-Every Microsoft 365 group already has a SharePoint site attached to it from the moment the group is created, so most of the SharePoint structure for SMLC was already sitting in the tenant once the groups from Step 03 existed. This step went through the ten sites in the approved design, confirmed the eight that already existed, created the two that did not, and then built the agreed folder structure inside each one.
+Staff need a clear place to store and find department files. That is the purpose of this step. Every Microsoft 365 group automatically gets a SharePoint site when the group is created, so much of the SMLC SharePoint structure already existed after the groups from Step 03 were created. This step checked the ten sites from the approved design, confirmed the eight that already existed, created the two missing sites, and then added the agreed folder structure inside each site.
 
-Eight of the ten sites needed no new work: SMLC-HQ, SMLC-Branch, SMLC-MgmtAdmin, SMLC-ITInfra, SMLC-TechOps, SMLC-BizOps, SMLC-Finance, and SMLC-KnowledgeBase are the sites that came automatically with their matching Microsoft 365 group. SMLC-Policies and SMLC-Templates have no department group behind them in the approved design, so these two were created as new Communication Sites instead, owned by the same management account that owns the SMLC-MgmtAdmin team.
+Eight of the ten sites did not need to be created manually: SMLC-HQ, SMLC-Branch, SMLC-MgmtAdmin, SMLC-ITInfra, SMLC-TechOps, SMLC-BizOps, SMLC-Finance, and SMLC-KnowledgeBase. These sites came automatically from their matching Microsoft 365 groups or Teams. SMLC-Policies and SMLC-Templates did not have department groups behind them in the approved design, so they were created separately as Communication Sites. They were owned by the same management account that owns the SMLC-MgmtAdmin team.
 
 ```powershell
 Connect-PnPOnline -Url https://samstack-admin.sharepoint.com -Interactive
@@ -217,36 +226,43 @@ New-PnPTenantSite -Title "SMLC-Policies" -Url "https://samstack.sharepoint.com/s
     -Owner "owner@samstack.onmicrosoft.com" -TimeZone 4 -Template "SITEPAGEPUBLISHING#0" -Wait
 ```
 
-A few naming differences were noted while confirming the eight existing sites. SMLC-HQ and SMLC-Branch are built on the SMLC-HQ-Staff and SMLC-BR-Staff groups, so their site address still carries the "-Staff" suffix from when those groups were first created, even though the group and Team were later renamed to "SMLC - HQ" and "SMLC - Branch". SMLC-KnowledgeBase is built on a Team that was created directly with no source group, so its site has a system-generated address rather than a clean SMLC name. None of the existing sites were renamed, since renaming a site address after the fact can break the links already pointing at it.
+A few naming differences appeared while checking the existing sites. SMLC-HQ and SMLC-Branch are based on the SMLC-HQ-Staff and SMLC-BR-Staff groups, so their site addresses still include the "-Staff" suffix from when those groups were first created. The groups and Teams were later renamed to "SMLC - HQ" and "SMLC - Branch", but the site URLs did not change. SMLC-KnowledgeBase was created from a Team with no original source group, so its site has a system-generated address instead of a clean SMLC name. The existing site addresses were not renamed because changing a SharePoint site URL later can break links that already point to it.
 
-One access gap turned up while setting up the two new sites: right after creation, only the named owner account had access, so the admin completing the setup had to add their own account as a site administrator from the SharePoint admin center before any folders could be added. This is a normal check after creating a site on someone else's behalf, and it is worth confirming on any new site before assuming it is ready to use.
+One access issue appeared while setting up the two new sites. Right after creation, only the named owner account had access. The admin completing the setup had to be added as a site collection administrator before folders could be created.
 
-With the ten sites confirmed, the agreed folder structure was added to the default document library of each one:
+```powershell
+Connect-PnPOnline -Url https://samstack-admin.sharepoint.com -Interactive
+Set-PnPTenantSite -Identity "https://samstack.sharepoint.com/sites/SMLC-Policies" -Owners "SamuelParsakian@samstack.onmicrosoft.com"
+```
 
-| Site | Folders |
-|---|---|
-| SMLC-HQ | Announcements, Company Policies, Templates, Forms, General Documents |
-| SMLC-Branch | Branch Operations, Field Visits, Customer Notes, Branch Reports, Local Procedures |
-| SMLC-MgmtAdmin | HR Records, Employee Documents, Contracts, Internal Policies, Management Reports |
-| SMLC-ITInfra | Network Documentation, Firewall Rules, Microsoft 365 Admin, Server Documentation, Backup Records, Security Incidents, Change Logs |
-| SMLC-TechOps | Support Procedures, Software Packages, Customer Notes, Field Reports, Troubleshooting Guides, Escalations |
-| SMLC-BizOps | Sales Leads, Marketing, Customer Requests, Reports, Customer Documents |
-| SMLC-Finance | Invoices, Payroll, Expenses, Tax, Reports, Vendor Payments |
-| SMLC-KnowledgeBase | Support Guides, Troubleshooting, Known Issues, Internal Procedures |
-| SMLC-Policies | Company Policies, Security Policies, HR Policies, IT Policies |
-| SMLC-Templates | Forms, Letter Templates, Report Templates, Customer Templates |
+This is a useful check whenever a site is created on someone else's behalf. A site may exist, but the person doing the setup still needs enough access to finish configuring it.
 
-PnP PowerShell needed a fresh sign-in for every individual site it connected to, which was not practical across ten sites in a row. Instead, the folders were added by calling the SharePoint REST API directly from the browser, while already signed in to the site:
+After the ten sites were confirmed, the agreed folder structure was added to the default document library of each site:
+
+| Site               | Folders                                                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| SMLC-HQ            | Announcements, Company Policies, Templates, Forms, General Documents                                                              |
+| SMLC-Branch        | Branch Operations, Field Visits, Customer Notes, Branch Reports, Local Procedures                                                 |
+| SMLC-MgmtAdmin     | HR Records, Employee Documents, Contracts, Internal Policies, Management Reports                                                  |
+| SMLC-ITInfra       | Network Documentation, Firewall Rules, Microsoft 365 Admin, Server Documentation, Backup Records, Security Incidents, Change Logs |
+| SMLC-TechOps       | Support Procedures, Software Packages, Customer Notes, Field Reports, Troubleshooting Guides, Escalations                         |
+| SMLC-BizOps        | Sales Leads, Marketing, Customer Requests, Reports, Customer Documents                                                            |
+| SMLC-Finance       | Invoices, Payroll, Expenses, Tax, Reports, Vendor Payments                                                                        |
+| SMLC-KnowledgeBase | Support Guides, Troubleshooting, Known Issues, Internal Procedures                                                                |
+| SMLC-Policies      | Company Policies, Security Policies, HR Policies, IT Policies                                                                     |
+| SMLC-Templates     | Forms, Letter Templates, Report Templates, Customer Templates                                                                     |
+
+PnP PowerShell required a fresh sign-in for each individual site connection, which was not practical across ten sites. Instead, the folders were added by calling the SharePoint REST API directly from the browser while already signed in to the site:
 
 ```javascript
 const digest = await fetch(`${siteUrl}/_api/contextinfo`, { method: "POST" });
 await fetch(`${siteUrl}/_api/web/folders/add('Shared Documents/Invoices')`, {
-    method: "POST",
-    headers: { "X-RequestDigest": digestValue }
+  method: "POST",
+  headers: { "X-RequestDigest": digestValue },
 });
 ```
 
-Permissions were kept simple in this step, matching the group-based access model already in place: the eight group-connected sites keep the same owners as their Microsoft 365 group, and the two new sites have only their named owner set. No Members or Visitors groups were customised and no sharing settings were changed, since that work belongs to the SharePoint permissions step that follows this one.
+Permissions were kept simple in this step and matched the group-based access model already in place. The eight group-connected sites kept the same owners as their Microsoft 365 groups, and the two new sites had only their named owner set. Members groups, Visitors groups, and sharing settings were not changed here because the detailed permission work was planned for the next SharePoint step.
 
 Four reports were saved for this step:
 
@@ -261,41 +277,44 @@ _Active sites page, showing the ten SMLC SharePoint sites alongside the tenant's
 ![SMLC-Policies document library](images/step05-policies-folders.png)
 _Documents library for SMLC-Policies, showing the four policy folders created for that site._
 
-Permissions on these sites are still sitting at their defaults, and nobody has touched admin roles or guest access yet. That is the natural next piece of work, now that the sites and folders themselves are ready.
+At this point, the sites and folders existed, but the permissions were still mostly at their defaults. Admin roles and guest access had also not been handled yet. The next step was therefore to apply the SharePoint permission model.
 
-Step 06 — SharePoint Permission Model
+### Step 06 — SharePoint Permission Model
 
-The previous step left one open item: when SMLC-Policies and SMLC-Templates were created, only their named owner had access, and the second owner could not be added straight away. This step started by fixing that, then went through all ten sites to apply the group-based permission model agreed for SMLC.
+A folder structure is only useful if the right people can access it and the wrong people cannot. This step closed the gap between "the sites exist" and "the sites are only open to the correct groups." The previous step left one open item: when SMLC-Policies and SMLC-Templates were created, only their named owner had access, and the second owner could not be added immediately. This step started by fixing that issue and then applied the agreed SMLC permission model across all ten sites.
 
-The second owner was added successfully this time, now that the access gap on the two sites was already closed. The same account was also set as a full site collection administrator on both sites, not only a member of the Owners group, which matches what "second owner" is meant to cover.
+The second owner was added successfully this time because the access issue on the two sites had already been fixed. The same account was also made a full site collection administrator on both sites, not only a member of the Owners group. That matches what "second owner" means in practice.
 
 ```javascript
 const digest = await fetch(`${siteUrl}/_api/contextinfo`, { method: "POST" });
 await fetch(`${siteUrl}/_api/web/associatedownergroup/users`, {
-    method: "POST",
-    headers: { "X-RequestDigest": digestValue },
-    body: JSON.stringify({ "__metadata": { "type": "SP.User" }, "LoginName": "operations.manager@samstack.onmicrosoft.com" })
+  method: "POST",
+  headers: { "X-RequestDigest": digestValue },
+  body: JSON.stringify({
+    __metadata: { type: "SP.User" },
+    LoginName: "operations.manager@samstack.onmicrosoft.com",
+  }),
 });
 ```
 
-The rest of the work followed the agreed permission table, using the Microsoft 365 groups already in place rather than individual accounts, so that access stays correct automatically as people join or leave a department:
+The rest of the work followed the agreed permission table. Existing Microsoft 365 groups were used instead of individual user accounts, so access can stay accurate when people join or leave a department:
 
-| Site | Change made |
-|---|---|
-| SMLC-HQ | SMLC-ITInfra added as an additional owner; SMLC-Branch given optional read access |
-| SMLC-Branch | SMLC-ITInfra added as an additional owner; SMLC-MgmtAdmin given optional read access |
-| SMLC-MgmtAdmin | No change - kept restricted to MgmtAdmin only |
-| SMLC-ITInfra | No change - kept restricted to ITInfra only |
-| SMLC-TechOps | SMLC-ITInfra added as an additional owner, covering its support role across FieldOps and Support |
-| SMLC-BizOps | SMLC-MgmtAdmin added as an additional owner |
-| SMLC-Finance | No change - kept restricted to Finance only |
-| SMLC-KnowledgeBase | SMLC-TechOps and SMLC-ITInfra added with edit access; SMLC-All-Staff given read-only access |
-| SMLC-Policies | SMLC-MgmtAdmin and SMLC-ITInfra added as owners, SMLC-MgmtAdmin given edit access, SMLC-All-Staff given read-only access |
-| SMLC-Templates | SMLC-MgmtAdmin and SMLC-ITInfra added as owners, SMLC-MgmtAdmin given edit access, SMLC-All-Staff given read-only access |
+| Site               | Change made                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| SMLC-HQ            | SMLC-ITInfra added as an additional owner; SMLC-Branch given optional read access                                        |
+| SMLC-Branch        | SMLC-ITInfra added as an additional owner; SMLC-MgmtAdmin given optional read access                                     |
+| SMLC-MgmtAdmin     | No change - kept restricted to MgmtAdmin only                                                                            |
+| SMLC-ITInfra       | No change - kept restricted to ITInfra only                                                                              |
+| SMLC-TechOps       | SMLC-ITInfra added as an additional owner, covering its support role across FieldOps and Support                         |
+| SMLC-BizOps        | SMLC-MgmtAdmin added as an additional owner                                                                              |
+| SMLC-Finance       | No change - kept restricted to Finance only                                                                              |
+| SMLC-KnowledgeBase | SMLC-TechOps and SMLC-ITInfra added with edit access; SMLC-All-Staff given read-only access                              |
+| SMLC-Policies      | SMLC-MgmtAdmin and SMLC-ITInfra added as owners, SMLC-MgmtAdmin given edit access, SMLC-All-Staff given read-only access |
+| SMLC-Templates     | SMLC-MgmtAdmin and SMLC-ITInfra added as owners, SMLC-MgmtAdmin given edit access, SMLC-All-Staff given read-only access |
 
-Every group could be added directly by its email address, the same way a person would be added, since Microsoft 365 groups can act as SharePoint permission principals on their own. Finance, MgmtAdmin, and ITInfra were deliberately left untouched, since the design calls for these three to stay closed to general staff.
+Each group could be added directly by email address, the same way an individual person would be added. This works because Microsoft 365 groups can be used as SharePoint permission principals. Finance, MgmtAdmin, and ITInfra were deliberately left unchanged because the design requires those areas to stay closed to general staff.
 
-External sharing was turned off on all ten sites as the last part of this step, so none of them can be shared with people outside the organisation:
+External sharing was turned off on all ten sites at the end of this step, so none of these sites can be shared with people outside the organisation:
 
 ```powershell
 Connect-PnPOnline -Url https://samstack-admin.sharepoint.com -Interactive
@@ -317,11 +336,11 @@ _Site permissions page for SMLC-Policies, showing operations.manager listed as a
 ![SMLC-Finance group membership](images/step06-finance-permissions.png)
 _Group membership panel for SMLC-Finance, showing access limited to the Finance team only._
 
-Admin roles and guest access still have not been looked at. SharePoint itself is in a good place now though, with permissions matching the design and external sharing turned off everywhere, so Exchange Online and its mail security rules are next.
+Admin roles and guest access had still not been reviewed at this point. SharePoint itself was now in a better state, with permissions matching the design and external sharing turned off everywhere. The next step moved back to Exchange Online to add basic email security rules.
 
-Step 07 — Exchange Online and Basic Email Security
+### Step 07 — Exchange Online and Basic Email Security
 
-The mailboxes, shared mailboxes, and distribution lists were already set up back in Step 03, but nothing had been done yet to protect the mail flow itself. This step went back over that setup to confirm it was still correct, then added a small set of mail flow rules that any small company would normally turn on early: a warning for mail coming from outside the company, and a block on the file types most often used to deliver malware.
+Mailboxes, shared mailboxes, and distribution lists were already created in Step 03, but the mail flow itself had not been protected yet. This step first checked that the earlier mail setup was still correct, then added two basic mail flow protections that a small company would normally enable early: a warning banner for email from outside the company, and a block on risky attachment file types that are commonly used to deliver malware.
 
 ```powershell
 Connect-ExchangeOnline
@@ -336,11 +355,29 @@ New-TransportRule -Name "SMLC - Block Risky Attachments" `
     -RejectMessageReasonText "This file type is blocked for security reasons. Contact IT support if you need to share this file."
 ```
 
-Before either rule was created, the tenant had no mail flow rules at all, so both went in cleanly. The five sensitive distribution lists from Step 03 - All Staff, Management, HR, Finance, and Security - were checked again and still only accept mail from the management group, exactly as they were left. Permissions on the nine shared mailboxes were also checked against the original design and matched: each one still grants full access and send-as rights to the same department staff it was set up for, and nothing else. None of the 35 mailboxes in the tenant had any forwarding rule configured, which is the expected state for a tenant that has not been touched by anyone outside the project.
+Before these rules were created, the tenant had no mail flow rules, so both rules were added cleanly. The five sensitive distribution lists from Step 03 - All Staff, Management, HR, Finance, and Security - were checked again and still only accepted mail from the management group. The nine shared mailboxes were also checked against the original design. Each shared mailbox still granted Full Access and Send As rights only to the department staff it was created for. None of the 35 mailboxes in the tenant had forwarding configured, which is the expected result for a controlled lab tenant.
 
-One setting still could not be finished. Blocking automatic forwarding to external addresses is normally done through the outbound spam filter policy, but this tenant had never had any policy customisation applied before, which Exchange Online requires as a one-time step first. That one-time step was run, and the forwarding setting was checked again on a separate day to give it time to take effect, but it is still being rejected with the same message. AutoForwardingMode is therefore left at the tenant default for now, not yet switched to Off. This was checked twice across two sessions and both times no mailbox in the tenant had any forwarding rule configured at all, so there is no real exposure while this setting finishes propagating on Microsoft's side.
+One setting could not be completed in this step. Blocking automatic forwarding to external addresses is normally done through the outbound spam filter policy. However, this tenant had never had policy customisation enabled before, and Exchange Online requires that one-time setup before the policy can be changed.
 
-Anti-spam, anti-malware, and basic anti-phishing protection were all confirmed present and active, since these come as standard with every Exchange Online mailbox. Safe Links and Safe Attachments, which catch malicious links and attachments at the moment someone opens them, belong to Microsoft Defender for Office 365 and are not part of the Business Basic plan SMLC is using - both are noted here as a planned upgrade rather than something missing by mistake. The security@samstack.onmicrosoft.com mailbox used for alerts was also confirmed to still exist and hold the same access it was given in Step 03.
+```powershell
+Enable-OrganizationCustomization
+Set-HostedOutboundSpamFilterPolicy -Identity Default -AutoForwardingMode Off
+Get-Mailbox -ResultSize Unlimited | Select-Object UserPrincipalName, ForwardingSmtpAddress, ForwardingAddress
+```
+
+That one-time setup command was run, and the forwarding setting was checked again on a separate day to give Microsoft time to apply the change. The setting was still rejected with the same message. Because of that, AutoForwardingMode remains at the tenant default for now instead of being switched to Off. This was checked twice across two sessions, and both checks confirmed that no mailbox in the tenant had a forwarding rule configured. So although the tenant-wide block is still open, there was no active forwarding exposure at the time of the review.
+
+Anti-spam, anti-malware, and basic anti-phishing protection were confirmed as present and active. These protections come as standard with every Exchange Online mailbox:
+
+```powershell
+Get-HostedContentFilterPolicy -Identity Default
+Get-MalwareFilterPolicy -Identity Default
+Get-AntiPhishPolicy -Identity "Office365 AntiPhish Default"
+Get-SafeLinksPolicy
+Get-SafeAttachmentPolicy
+```
+
+Safe Links and Safe Attachments protect users when they open suspicious links or attachments. Those features belong to Microsoft Defender for Office 365 and are not included in the Business Basic plan SMLC is using. They are therefore listed as a planned upgrade, not as a mistake in the setup. The security@samstack.onmicrosoft.com mailbox used for alerts was also confirmed to still exist and still had the same access it received in Step 03.
 
 Eight reports were saved for this step:
 
@@ -359,15 +396,22 @@ _Mail flow page in the Exchange admin center, showing the two new SMLC rules ena
 ![External sender warning on a test email](images/step07-external-banner.png)
 _An email received from outside the organisation, showing the warning banner added above the message body._
 
-Conditional access, MFA, and the remaining Defender features are still ahead. The auto-forwarding block stays on the list as the one open item from this step, to be switched on once Microsoft's side catches up - everything else is in place, which is enough to move on and look at how Microsoft 365 itself is running: service health and the message centre.
+Conditional Access, MFA, and the remaining Defender features were still left for future work. The auto-forwarding block remained the one open item from this step and should be switched on once Microsoft's side finishes applying the required customisation. Everything else from this step was in place, so the next check focused on Microsoft 365 service health and the Message center.
 
-Step 08 — Service Health and Message Center
+### Step 08 — Service Health and Message Center
 
-A tenant does not run in isolation, so part of looking after it is keeping an eye on what Microsoft itself is reporting about the service. This step was a short review of two pages in the admin center rather than a configuration change: Service health, which shows whether anything is currently broken, and Message center, which lists upcoming changes Microsoft is rolling out.
+A Microsoft 365 tenant does not run completely on its own. Administrators also need to watch what Microsoft reports about the service. This step was a review rather than a configuration change. Service health was checked to see whether anything was currently broken, and Message center was checked for upcoming Microsoft changes that could affect the tenant.
 
-Service health showed three advisories at the time of the check - a minor meeting room availability glitch in Exchange Online, a webhook notification issue in Microsoft To Do, and a SharePoint Online search schema display issue. All three were Microsoft-side advisories rather than outages, and none of them affect anything SMLC depends on. Every other listed service, including Teams, SharePoint, Exchange, and Entra, showed as healthy.
+```powershell
+Connect-MgGraph -Scopes "ServiceHealth.Read.All","ServiceMessage.Read.All"
 
-Message center had 404 items, far too many to read individually, so the review focused on picking out the ones that actually matter. One stood out: an update saying Microsoft Entra ID self-service password reset will require a registered authentication method from everyone starting 6 September 2026. This is worth tracking closely, since SMLC has not set up multi-factor authentication or conditional access yet - once that work starts, every user account will need a registered method in place before the deadline, or that person will not be able to reset their own password and will need an admin to do it manually instead.
+Get-MgServiceAnnouncementHealthOverview | Export-Csv "01_ServiceHealth.csv" -NoTypeInformation
+Get-MgServiceAnnouncementMessage -Top 10 | Select-Object Title, Services, LastModifiedDateTime
+```
+
+Service health showed three advisories at the time of the check: a minor meeting room availability issue in Exchange Online, a webhook notification issue in Microsoft To Do, and a SharePoint Online search schema display issue. These were Microsoft-side advisories, not tenant configuration problems. None of them affected anything SMLC depends on. The other listed services, including Teams, SharePoint, Exchange, and Entra, showed as healthy.
+
+Message center had 404 items, which was too many to review one by one in detail. The review focused on the messages most relevant to this tenant. One important update stood out: Microsoft Entra ID self-service password reset will require every user to have a registered authentication method starting 6 September 2026. This matters because SMLC has not set up multi-factor authentication or Conditional Access yet. When that work begins, every user account will need a registered method before the deadline, otherwise users will not be able to reset their own passwords and an admin will have to do it manually.
 
 Two reports were saved for this step:
 
@@ -380,19 +424,37 @@ _Service health page, showing the three active advisories and the healthy status
 ![Message center inbox](images/step08-message-center.png)
 _Message center inbox, showing the volume and range of messages Microsoft sends to tenant admins._
 
-Nothing here needed fixing today, but the password reset change is worth remembering for later, since MFA and conditional access have not been set up yet and that deadline will matter once they are. After this, it felt like a good time to sit down and actually look through who has access to what across the tenant.
+Nothing in this step needed immediate fixing. However, the password reset change is important for later because MFA and Conditional Access have not been configured yet. After reviewing service health and upcoming Microsoft changes, the next step was to manually check who had access to what across the tenant.
 
-Step 09 — Manual Access Review and Guest Access Test
+### Step 09 — Manual Access Review and Guest Access Test
 
-This was the closing check for Part 1: going back through every group, looked at from the angle of "does this person actually need to be here," and then trying out what happens when an outside guest is added to the mix.
+This was the closing check for Part 1. The goal was to review group membership from a practical security point of view: does each person actually need the access they have? After that, the step tested what happens when an outside guest is invited into the tenant.
 
-Membership in Finance, MgmtAdmin, ITInfra, BizOps, TechOps, and Knowledge Base was pulled and checked against the original design, alongside the dedicated security groups (SG-SMLC-Finance-Private, SG-SMLC-HR-Private, SG-SMLC-ITInfra-Private, SG-SMLC-TechOps-Tools, SG-SMLC-FieldOps-RemoteAccess). Everything matched: Finance still has only its three Finance staff, ITInfra still has only its six IT staff, and nobody outside HR sits in the HR security group. Knowledge Base, Policies, and Templates were not re-checked from scratch, since nothing has touched SharePoint since Step 06 - their read-only all-staff access is still on record there.
+Membership in Finance, MgmtAdmin, ITInfra, BizOps, TechOps, and Knowledge Base was exported and checked against the original design. The dedicated security groups were reviewed as well: SG-SMLC-Finance-Private, SG-SMLC-HR-Private, SG-SMLC-ITInfra-Private, SG-SMLC-TechOps-Tools, and SG-SMLC-FieldOps-RemoteAccess.
 
-The admin-only and break-glass accounts were the other half of this check. All ten of them - the eight `adm-` accounts plus the two break-glass accounts - sit in exactly two places, SMLC-Admins and SG-SMLC-M365-Admins, and nowhere else. None of them turned up in any department group, any security group, any Team, or any shared mailbox. Daily work and emergency access stay completely separate, exactly as they were set up back in Step 02.
+```powershell
+Connect-MgGraph -Scopes "Group.Read.All","GroupMember.Read.All","User.Read.All"
 
-The second half of the step was trying to add two guest users for testing: a vendor contact for TechOps and a clinic contact for BizOps, each meant to get a small, limited slice of access and nothing more. Both invitations were rejected outright by the tenant before anything could be created. Tracking down why took a few checks - the setting that controls who can send invitations was already wide open, there were no Conditional Access policies in place, and the cross-tenant collaboration settings allowed external users by default. The actual cause turned out to be Security Defaults, which is switched on for this tenant and enforces baseline protections, including around multi-factor authentication, before sensitive actions like inviting a guest are allowed to go through. Since MFA has not been set up for anyone yet - the same gap flagged in the previous step's Message Center review - the invitation never had a chance.
+foreach ($groupName in @("SMLC - Finance","SMLC - MgmtAdmin","SMLC - ITInfra","SG-SMLC-Finance-Private","SG-SMLC-HR-Private")) {
+    $group = Get-MgGroup -Filter "displayName eq '$groupName'"
+    Get-MgGroupMember -GroupId $group.Id -All | ForEach-Object { (Get-MgUser -UserId $_.Id).UserPrincipalName }
+}
+```
 
-No guest accounts exist in the tenant as a result, which is arguably the better outcome for this stage: it shows the tenant is refusing external access on its own, before any access decision even had to be made. Turning that protection off just to push two test accounts through would have defeated the point of running this check in the first place, so it was left exactly as it was found.
+Everything matched the design. Finance still had only its three Finance staff, ITInfra still had only its six IT staff, and nobody outside HR was in the HR security group. Knowledge Base, Policies, and Templates were not re-checked from the beginning because SharePoint had not changed since Step 06. Their read-only all-staff access was already recorded there.
+
+The admin-only and break-glass accounts were the other important part of this review. All ten of them - the eight `adm-` accounts plus the two break-glass accounts - appeared only in SMLC-Admins and SG-SMLC-M365-Admins. They did not appear in any department group, security group, Team, or shared mailbox. This confirms that daily work access and emergency/admin access stayed separate, as planned in Step 02.
+
+The second half of the step tested guest access. Two guest users were planned: a vendor contact for TechOps and a clinic contact for BizOps. Each guest was meant to receive only a small, limited amount of access.
+
+```powershell
+New-MgInvitation -InvitedUserEmailAddress "vendor.tech@example.com" -InvitedUserDisplayName "Vendor Tech (Guest)" `
+    -InviteRedirectUrl "https://myapps.microsoft.com" -SendInvitationMessage:$false
+```
+
+Both invitations were rejected by the tenant before any guest account could be created. Finding the reason took a few checks. The setting that controls who can send invitations was already open, there were no Conditional Access policies in place, and the cross-tenant collaboration settings allowed external users by default. The real cause was Security Defaults, which is enabled for this tenant. Security Defaults enforces baseline protections, including multi-factor authentication requirements, before sensitive actions such as guest invitations are allowed. Because MFA has not been set up for users yet - the same gap noted in the previous Message Center review - the guest invitations could not go through.
+
+As a result, no guest accounts were created in the tenant. For this stage of the project, that is actually a useful result because it shows the tenant is refusing external access before any guest permissions can be assigned. Security Defaults were not turned off just to force the test accounts through, because that would weaken the tenant only to complete a lab test. The setting was left as it was found.
 
 Six reports were saved for this step:
 
@@ -409,19 +471,74 @@ _Microsoft Entra admin center, showing Security Defaults switched on for the ten
 ![No guest users in the directory](images/step09-no-guests.png)
 _Users list filtered to guest accounts, showing none exist after the blocked invitation attempt._
 
-This closes out Part 1. Every account, group, site, and mailbox has been checked against the design at least once, and the one open door - guest access - turned out to already be locked. Part 2 picks up from here with onboarding, offboarding, and incident response.
+This closed Part 1. Every account, group, site, and mailbox had been checked against the design at least once. The one open area - guest access - turned out to already be blocked by the tenant's security settings. Part 2 continues from here with onboarding, offboarding, and incident response.
 
-Step 10 — Onboarding, Offboarding, and Incident Response Test
+### Step 10 — Onboarding, Offboarding, and Incident Response Test
 
-With the design checked over, the last piece of Part 2 was running the day-to-day situations the tenant is actually built for: a new starter joining TechOps, a branch support member leaving, and a Finance account that needed to be treated as compromised.
+After the design review, the final practical step was to test common admin situations. This included a new starter joining TechOps, a Branch Support user leaving the company, and a Finance account being treated as compromised.
 
-The onboarding test created `new.techops01`, added it to SMLC - TechOps and its matching security group, and stopped there to check the result. Knowledge Base access did not need a separate step - the TechOps group is already a member of that site from Step 06, so anyone added to TechOps inherits it automatically. A license was not assigned: all 25 Business Basic seats were already in use, so the script correctly skipped licensing rather than forcing it, and the account was left unlicensed with a note explaining why. Reading the account's group membership back afterwards confirmed it sits only in TechOps - none of Finance, MgmtAdmin, ITInfra, or the admin groups picked it up.
+The onboarding test created `new.techops01`, added the account to SMLC - TechOps and the matching security group, and then checked the result.
 
-The offboarding test ran against `br.support02`, an existing Branch Support account. Sign-in was blocked and the account's sessions were revoked, then group removal started - and turned up something worth knowing: Microsoft Graph can remove someone from a Microsoft 365 group or a security group, but it refuses to touch a classic mail-enabled distribution list, returning a flat "cannot update" error. Three of the account's eleven groups were exactly that kind of distribution list, so those three were removed separately through Exchange Online instead. The account's Full Access and Send As rights on the shared Support mailbox were removed the same way. A check for a OneDrive to clean up found none - this account was never licensed in the first place, so it never had one. By the end, the account was fully blocked, signed out, and removed from everything it had access to.
+```powershell
+Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All","Organization.Read.All"
 
-The incident response demo treated `finance.assistant` as a compromised account. Sign-in was blocked immediately and sessions were revoked. A password reset was attempted next and was refused by the tenant with an insufficient-privileges error - the same kind of protection behind Security Defaults that blocked guest invitations in the previous step showed up again here, this time getting in the way of the admin's own response. The account's password was left as it was rather than forced through some other way. Mailbox forwarding was checked and confirmed clear. Group membership was reviewed and came back as expected for a Finance, HQ-based staff member - Finance, the Finance security group, the office and all-staff groups - nothing pointed to unusual access. A check of recent sign-in activity could not be completed: Business Basic does not include access to sign-in logs through this API, the same limitation flagged for Defender features back in Step 07. Sign-in was switched back on at the end so the account, and the lab, could keep working - the revoked sessions stay revoked, so it will need a fresh sign-in either way.
+New-MgUser -DisplayName "New TechOps One" -UserPrincipalName "new.techops01@samstack.onmicrosoft.com" `
+    -MailNickname "new.techops01" -AccountEnabled `
+    -PasswordProfile @{ Password = $tempPassword; ForceChangePasswordNextSignIn = $true } `
+    -UsageLocation "SE" -Department "TechOps" -JobTitle "TechOps Staff"
 
-Nine reports were saved across the two folders for this step:
+Add-MgGroupMember -GroupId $techOpsGroupId -DirectoryObjectId $newUser.Id
+Add-MgGroupMember -GroupId $techOpsSecurityGroupId -DirectoryObjectId $newUser.Id
+
+Get-MgUserMemberOf -UserId $newUser.Id | Select-Object DisplayName
+```
+
+Knowledge Base access did not need to be added separately. The TechOps group was already granted access to that site in Step 06, so anyone added to TechOps inherits that access automatically. A license was not assigned because all 25 Business Basic seats were already in use. Licensing was skipped instead of forced, and the account was left unlicensed with a note explaining why. A membership check confirmed that the account belonged only to TechOps-related groups. It was not accidentally added to Finance, MgmtAdmin, ITInfra, or any admin group.
+
+The offboarding test used `br.support02`, an existing Branch Support account.
+
+```powershell
+Connect-MgGraph -Scopes "User.ReadWrite.All","Group.ReadWrite.All"
+
+$user = Get-MgUser -UserId "br.support02@samstack.onmicrosoft.com"
+Update-MgUser -UserId $user.Id -AccountEnabled:$false
+Revoke-MgUserSignInSession -UserId $user.Id
+
+Get-MgUserMemberOf -UserId $user.Id -All | ForEach-Object {
+    Remove-MgGroupMemberByRef -GroupId $_.Id -DirectoryObjectId $user.Id
+}
+```
+
+Sign-in was blocked and the account's sessions were revoked. Then group removal started, which revealed an important detail: Microsoft Graph can remove someone from a Microsoft 365 group or security group, but it cannot remove them from a classic mail-enabled distribution list. In that case, Graph returned a "cannot update" error. Three of the account's eleven groups were classic distribution lists, so those memberships had to be removed separately through Exchange Online:
+
+```powershell
+Connect-ExchangeOnline
+Remove-MailboxPermission -Identity "support@samstack.onmicrosoft.com" -User "br.support02@samstack.onmicrosoft.com" -AccessRights FullAccess
+Remove-RecipientPermission -Identity "support@samstack.onmicrosoft.com" -Trustee "br.support02@samstack.onmicrosoft.com" -AccessRights SendAs
+Remove-DistributionGroupMember -Identity "allstaff@samstack.onmicrosoft.com" -Member "br.support02@samstack.onmicrosoft.com"
+```
+
+The account's Full Access and Send As rights on the shared Support mailbox were removed through Exchange Online as well. A OneDrive cleanup check found nothing because the account had never been licensed, so it never had a OneDrive. By the end of the offboarding test, the account was blocked from sign-in, signed out, and removed from everything it had access to.
+
+The incident response demo treated `finance.assistant` as a compromised account.
+
+```powershell
+$user = Get-MgUser -UserId "finance.assistant@samstack.onmicrosoft.com"
+Update-MgUser -UserId $user.Id -AccountEnabled:$false
+Update-MgUser -UserId $user.Id -PasswordProfile @{ Password = $newPassword; ForceChangePasswordNextSignIn = $true }
+Revoke-MgUserSignInSession -UserId $user.Id
+Get-MgUserMemberOf -UserId $user.Id -All | ForEach-Object { (Get-MgGroup -GroupId $_.Id).DisplayName }
+Get-MgAuditLogSignIn -Filter "userPrincipalName eq 'finance.assistant@samstack.onmicrosoft.com'" -Top 10
+
+Connect-ExchangeOnline
+Get-Mailbox -Identity "finance.assistant@samstack.onmicrosoft.com" | Select-Object ForwardingSmtpAddress, ForwardingAddress
+
+Update-MgUser -UserId $user.Id -AccountEnabled:$true
+```
+
+Sign-in was blocked immediately and active sessions were revoked. A password reset was attempted next, but the tenant rejected it with an insufficient-privileges error. This was similar to the Security Defaults issue from the guest invitation test: the tenant requires stronger authentication before allowing some sensitive admin actions. The password was left unchanged instead of being forced through another method. Mailbox forwarding was checked and confirmed clear. Group membership was reviewed and matched what was expected for a Finance staff member based at HQ: Finance, the Finance security group, the office group, and all-staff groups. Nothing pointed to unusual access. Recent sign-in activity could not be checked because Business Basic does not include access to sign-in logs through this API, which is similar to the Defender feature limitations noted in Step 07. Sign-in was turned back on at the end so the account and lab could continue working. The revoked sessions stayed revoked, so the account would still need a fresh sign-in.
+
+Eight reports were saved across the two folders for this step:
 
 - Reports/Onboarding_Offboarding/01_OnboardingTest.csv
 - Reports/Onboarding_Offboarding/02_OffboardingTest.csv
@@ -438,4 +555,31 @@ _Microsoft Entra admin center, showing new.techops01's group membership limited 
 ![br.support02 blocked sign-in](images/step10-offboarding-blocked.png)
 _Microsoft Entra admin center, showing br.support02's account status as disabled and group memberships at zero._
 
-This is the last build-and-test step in the project. Every account type, every department, and the three situations an admin deals with most often - someone joining, someone leaving, and something going wrong - have now all been run through and written up. What is left is pulling the whole record together into a finished write-up.
+This was the last build-and-test step in the project. Every account type, every department, and three common admin situations - someone joining, someone leaving, and a possible compromise - had now been tested and documented. The remaining work was to pull the project record together into a finished write-up.
+
+### Project Summary
+
+The project was completed in a clear order: user accounts, groups and mail, Teams, SharePoint sites, SharePoint permissions, Exchange security rules, Service Health and Message Center, manual access review with guest access testing, and finally onboarding, offboarding, and incident response testing. Each step built on the accounts, groups, sites, or permissions created earlier.
+
+**Business Basic limitations found along the way**
+
+A recurring theme in the second half of the project was understanding where the Business Basic plan stops and where a higher plan would be needed:
+
+- Safe Links and Safe Attachments (Microsoft Defender for Office 365) are not included - confirmed in Step 07.
+- Sign-in log review through the Graph API is not available without an Entra ID premium plan - confirmed in Step 10, and the same restriction applies to the Identity Protection features that depend on it.
+- Resetting another user's password and inviting a guest both depend on Security Defaults being satisfied with a stronger authentication context than a standard admin session provides - found in Step 09 and Step 10.
+- The outbound spam policy could not be customised until a one-time tenant unlock (`Enable-OrganizationCustomization`) was run, and even after running it, the change was still propagating at the time of writing - found in Step 07.
+
+None of these became full blockers. Each limitation was checked, documented, and either handled with a safe alternative or left as a clearly labelled open item.
+
+**Planned improvements for a future phase**
+
+If this project continued beyond the current scope, the next practical improvements would be:
+
+- Setting up multi-factor authentication and Conditional Access, which would also resolve the guest invitation and password reset restrictions found in Steps 09 and 10.
+- Finishing the auto-forwarding block once Microsoft's side has fully applied the organisation customisation change from Step 07.
+- Adding a custom domain with DKIM and DMARC, once SMLC moves off the default `samstack.onmicrosoft.com` address.
+- Assigning the admin-only accounts their actual Entra ID roles (Privileged Role Administrator, Exchange Administrator, and so on), since they currently exist and sit in the right groups but have not yet been given the roles their job titles describe.
+- Revisiting Defender for Office 365 and Entra ID Premium if the company's budget allows it, to close the Safe Links, Safe Attachments, and sign-in log gaps found along the way.
+
+This completes the build and testing planned for this phase of the project.
