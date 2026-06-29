@@ -37,6 +37,7 @@ The project starts from a business scenario and two source CSV files, then docum
 - Reviewed Service Health and Message Center.
 - Completed a manual access review and guest access test.
 - Tested onboarding, offboarding, and incident response workflows.
+- Exported the tenant's final configuration as a read-only evidence set.
 
 ## Repository Structure
 
@@ -45,6 +46,7 @@ The project starts from a business scenario and two source CSV files, then docum
 | [`Documents/`](Documents/)           | Business scenario, source CSV files, and network design image                                            |
 | [`Project_Record/`](Project_Record/) | Main project documentation with screenshots and step-by-step configuration notes                         |
 | [`Reports/`](Reports/)               | Exported CSV and JSON reports from Microsoft 365, Exchange Online, SharePoint, Teams, and access reviews |
+| [`Tenant_Configuration_Export/`](Tenant_Configuration_Export/) | Read-only export of the tenant's final configuration, including scripts and output files                |
 | [`.gitignore`](.gitignore)           | Repository ignore rules                                                                                  |
 
 ## Main Documentation
@@ -71,6 +73,23 @@ The `Reports/` folder contains exported evidence from each major project area:
 - onboarding, offboarding, and incident response
 
 Screenshots used in the project record are stored in [`Project_Record/images/`](Project_Record/images/).
+
+## Tenant Configuration Export
+
+[`Tenant_Configuration_Export/`](Tenant_Configuration_Export/) contains a read-only export of the final SMLC Microsoft 365 tenant configuration.
+
+The main project record documents how the tenant was built and tested. The tenant configuration export records what was present in the tenant at the end of the project by saving the live configuration into CSV files. This creates a final evidence set that sits alongside the step-by-step reports.
+
+Nothing in this folder changes the tenant. The scripts only read configuration data and save it under `Tenant_Configuration_Export/output/`.
+
+The export is separate from `Reports/` because `Reports/` contains snapshots collected during each project step. `Tenant_Configuration_Export/` is a final top-to-bottom export completed after the build, review, and test work was finished.
+
+Export coverage:
+
+1. [`Export-Identity.ps1`](Tenant_Configuration_Export/scripts/Export-Identity.ps1) - users, licenses, groups, group membership, admin roles, guest users, Teams, tenant security policy, Service Health, and Message Center.
+2. [`Export-ExchangeConfig.ps1`](Tenant_Configuration_Export/scripts/Export-ExchangeConfig.ps1) - mailboxes, shared mailbox permissions, distribution lists, sender restrictions, mail flow rules, and Exchange security policy state.
+3. [`Export-SharePointTenant.ps1`](Tenant_Configuration_Export/scripts/Export-SharePointTenant.ps1) - SharePoint site list and tenant-level sharing settings.
+4. [`browser-console-export-sharepoint-permissions.js`](Tenant_Configuration_Export/scripts/browser-console-export-sharepoint-permissions.js) - site-level Owners, Members, and Visitors groups from a signed-in SharePoint browser session.
 
 ## Tools and Services Used
 

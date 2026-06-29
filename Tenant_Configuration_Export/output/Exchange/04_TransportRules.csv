@@ -1,0 +1,3 @@
+"Name","State","Priority","Mode","Comments"
+"SMLC - External Sender Warning","Enabled","0","Enforce","SMLC basic Exchange security - warns staff about external senders"
+"SMLC - Block Risky Attachments","Enabled","1","Enforce","SMLC basic Exchange security - blocks common executable/script attachment types: exe, bat, cmd, com, scr, pif, vbs, js, ps1, msi, hta, jar, reg"

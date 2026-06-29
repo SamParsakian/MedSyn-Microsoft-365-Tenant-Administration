@@ -557,9 +557,53 @@ _Microsoft Entra admin center, showing br.support02's account status as disabled
 
 This was the last build-and-test step in the project. Every account type, every department, and three common admin situations - someone joining, someone leaving, and a possible compromise - had now been tested and documented. The remaining work was to pull the project record together into a finished write-up.
 
+### Step 11 — Final Tenant Configuration Export
+
+The Microsoft 365 tenant used for this project may not remain available long term. For that reason, the final configuration was exported from the live tenant and saved in the repository. This creates a separate record of the tenant's actual final state, independent from the scripts and notes used during the build steps.
+
+The export was completed in three read-only PowerShell sessions, one per service area, plus one SharePoint permission export from an already signed-in browser session.
+
+```powershell
+Connect-MgGraph -Scopes "User.Read.All","Group.Read.All","GroupMember.Read.All","Directory.Read.All","Policy.Read.All"
+
+Get-MgUser -All | Export-Csv "01_Users.csv" -NoTypeInformation
+Get-MgSubscribedSku | Export-Csv "02_Licenses.csv" -NoTypeInformation
+Get-MgGroup -All | Export-Csv "03_Groups.csv" -NoTypeInformation
+Get-MgPolicyIdentitySecurityDefaultEnforcementPolicy | Export-Csv "08_TenantSecurityPolicy.csv" -NoTypeInformation
+```
+
+```powershell
+Connect-ExchangeOnline
+
+Get-Mailbox -ResultSize Unlimited | Export-Csv "01_Mailboxes.csv" -NoTypeInformation
+Get-DistributionGroup -ResultSize Unlimited | Export-Csv "03_DistributionLists.csv" -NoTypeInformation
+Get-TransportRule | Export-Csv "04_TransportRules.csv" -NoTypeInformation
+```
+
+```powershell
+Connect-PnPOnline -Url "https://samstack-admin.sharepoint.com" -DeviceLogin
+Get-PnPTenantSite | Export-Csv "01_SiteList.csv" -NoTypeInformation
+```
+
+SharePoint Owners, Members, and Visitors groups could not be exported from the tenant admin connection alone, because those groups belong to each individual site. To avoid repeating a separate PnP sign-in for every site, the site permission groups were read through the SharePoint REST API from a browser session that was already signed in to SharePoint.
+
+```javascript
+const res = await fetch(`${siteUrl}/_api/web/associatedownergroup/users`, {
+  headers: { Accept: "application/json;odata=verbose" },
+});
+```
+
+The full export scripts are saved in `Tenant_Configuration_Export/scripts/`, and the results are saved in `Tenant_Configuration_Export/output/`:
+
+- Tenant_Configuration_Export/output/Identity/ (users, licenses, groups and membership, admin roles, guests, Teams, tenant security policy, Service Health, Message Center)
+- Tenant_Configuration_Export/output/Exchange/ (mailboxes, shared mailbox permissions, distribution lists, transport rules, anti-spam/malware/phishing policies)
+- Tenant_Configuration_Export/output/SharePoint/ (site list and per-site Owners/Members/Visitors)
+
+This closes the project with a final evidence set showing the tenant configuration as it existed after the build, review, and test steps were complete.
+
 ### Project Summary
 
-The project was completed in a clear order: user accounts, groups and mail, Teams, SharePoint sites, SharePoint permissions, Exchange security rules, Service Health and Message Center, manual access review with guest access testing, and finally onboarding, offboarding, and incident response testing. Each step built on the accounts, groups, sites, or permissions created earlier.
+The project was completed in a clear order: user accounts, groups and mail, Teams, SharePoint sites, SharePoint permissions, Exchange security rules, Service Health and Message Center, manual access review with guest access testing, onboarding, offboarding, and incident response testing, and finally a full extraction of the tenant's live configuration. Each step built on the accounts, groups, sites, or permissions created earlier.
 
 **Business Basic limitations found along the way**
 
