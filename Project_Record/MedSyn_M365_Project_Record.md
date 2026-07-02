@@ -12,20 +12,51 @@ The project was based on these starting documents:
 - [SMLC company master data](/Users/sam/Projects%20for%20CV/MedSyn_Microsoft_365/Documents/SMLC_company_master_data.csv)
 - [SMLC people master data](/Users/sam/Projects%20for%20CV/MedSyn_Microsoft_365/Documents/SMLC_people_master_data.csv)
 
-### Step 01 — Tenant Baseline Capture
+### Step 01 — macOS PowerShell Setup and Tenant Baseline Capture
 
 The project starts with the business scenario and two CSV files linked above. One CSV contains company-level information, and the other contains the planned user accounts. Together, these files describe the departments, office locations, and accounts that should exist in the Microsoft 365 tenant for Sam Medsyn Lab Company.
 
-Before making any changes, the current state of the tenant was exported and saved. This is a normal administration practice: first capture what the environment looks like, then make changes, and later compare the result against that original baseline.
+Before the tenant could be exported or configured, the admin workstation had to be ready. This project was completed from a Mac, so PowerShell was installed first and then the Microsoft 365 PowerShell modules were installed inside PowerShell. This setup was done once at the start of the project, and the versions were checked before connecting to the tenant.
 
-PowerShell was used for this step with the official Microsoft Graph, Exchange Online, and Microsoft Teams modules.
+On macOS, PowerShell itself was installed from Terminal with Homebrew:
+
+```zsh
+# Install PowerShell on macOS
+brew install --cask powershell
+
+# Start PowerShell
+pwsh
+```
+
+After PowerShell opened, the version was checked to confirm that the shell was installed correctly:
 
 ```powershell
-# Required modules (installed once)
+# Confirm the PowerShell version being used for the project
+$PSVersionTable.PSVersion
+```
+
+The Microsoft 365 modules were then installed for the current user. The Microsoft Graph module was required for Entra ID, users, groups, licenses, roles, service health, and tenant policy checks. Exchange Online, Microsoft Teams, and PnP PowerShell were installed for the service-specific work completed later in the project.
+
+```powershell
+# Required modules (installed once for the current macOS user)
 Install-Module Microsoft.Graph -Scope CurrentUser -Force
 Install-Module ExchangeOnlineManagement -Scope CurrentUser -Force
 Install-Module MicrosoftTeams -Scope CurrentUser -Force
+Install-Module PnP.PowerShell -Scope CurrentUser -Force
 ```
+
+The installed modules were checked before the first tenant connection. This confirmed that PowerShell could find the modules that the project scripts would use:
+
+```powershell
+# Confirm the installed Microsoft 365 PowerShell modules
+Get-InstalledModule Microsoft.Graph, ExchangeOnlineManagement, MicrosoftTeams, PnP.PowerShell |
+    Select-Object Name, Version
+
+# Confirm that the main Microsoft Graph connection command is available
+Get-Command Connect-MgGraph
+```
+
+With PowerShell and the required modules ready, the current state of the tenant was exported and saved. This is a normal administration practice: first capture what the environment looks like, then make changes, and later compare the result against that original baseline.
 
 ```powershell
 # Microsoft Graph: organization info, domains, users, licenses, groups, admin roles
